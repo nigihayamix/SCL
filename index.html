@@ -184,6 +184,7 @@
     #squareDeleteBtn:hover { background: #8f3131; }
     #squareDeleteBtn.hidden { display: none; }
 
+    /* ---- Модальные окна (инфо о квадрате / панель администратора) ---- */
     .modal-backdrop {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
       z-index: 1400; backdrop-filter: blur(2px);
@@ -397,6 +398,13 @@
     };
     firebase.initializeApp(FIREBASE_CONFIG);
     const squaresRef = firebase.database().ref('squares');
+    // ==========================================================
+
+    // ================= РОЛИ И ПРАВА (панель администратора) =================
+    // Помимо жёстко заданных владельцев в ADMIN_DISCORD_IDS (у них всегда есть
+    // ВСЕ права и они не могут быть понижены), можно создавать гибкие роли с
+    // настраиваемыми правами и выдавать их любым пользователям по Discord ID
+    // прямо из панели администратора (шестерёнка рядом с ником после входа).
     const rolesRef = firebase.database().ref('roles');
     const userRolesRef = firebase.database().ref('userRoles');
     let rolesData = {};
@@ -427,6 +435,9 @@
       };
     }
 
+    // Применяет текущие права к интерфейсу (кнопка квадрата, шестерёнка,
+    // возможность двигать/редактировать/удалять квадраты). Вызывается при
+    // входе, выходе и при любом live-изменении ролей/назначений в Firebase.
     function applyCurrentPermissions() {
       const perms = getPermissions(currentUser);
       window.isAdmin = perms.manageSquares;
@@ -442,6 +453,10 @@
       if (adminPanelOpen && typeof renderAdminPanelContent === 'function') renderAdminPanelContent();
       return perms;
     }
+
+    // Показывает читаемую ошибку прямо в панели администратора, если запись
+    // в Firebase не удалась (чаще всего — не обновлены правила безопасности
+    // для узлов "roles"/"userRoles", см. комментарий в начале файла).
     function showAdminError(err) {
       const el = document.getElementById('adminPanelError');
       if (!el) { console.error(err); return; }
@@ -455,6 +470,10 @@
       clearTimeout(showAdminError._t);
       showAdminError._t = setTimeout(() => { el.style.display = 'none'; }, 9000);
     }
+
+    // Если у пользователя уже есть выданная роль, при входе кэшируем его имя
+    // и аватар в userRoles — так в панели администратора видно не голый
+    // Discord ID, а реальное имя (узнаём его только когда человек сам зайдёт).
     function cacheUserRoleProfile(user) {
       const ur = userRolesData[user.id];
       if (!ur || isOwnerId(user.id)) return;
@@ -475,6 +494,7 @@
       if (adminPanelOpen) renderAdminPanelContent();
     });
 
+    // --- Панель администратора (модальное окно) ---
     let adminPanelOpen = false;
     const adminPanelEl = document.getElementById('adminPanelModal');
     const adminPanelBackdropEl = document.getElementById('adminPanelBackdrop');
@@ -580,6 +600,9 @@
         .then(() => { idInput.value = ''; })
         .catch(showAdminError);
     };
+    // ==========================================================================
+    // Majestic Wiki map tile pattern:
+    // https://cdn-world.majestic-files.net/public/master/wiki/map/black/{z}/{x}/{y}.png
     const layers = {
       black: 'https://cdn-world.majestic-files.net/public/master/wiki/map/black/{z}/{x}/{y}.png',
       satellite: 'https://cdn-world.majestic-files.net/public/master/wiki/map/satellite/{z}/{x}/{y}.jpg'
@@ -599,6 +622,11 @@
       touchZoom: true,
       boxZoom: false,
       keyboard: true,
+      // zoomAnimation отключена намеренно: во время анимированного зума Leaflet
+      // временно масштабирует весь слой карты (включая иконки квадратов) через
+      // CSS-transform, из-за чего квадраты визуально "прыгали" в размере при
+      // приближении. Без анимации зум происходит мгновенно, но квадраты всегда
+      // остаются ровно в заданном пиксельном размере.
       zoomAnimation: false
     });
 
@@ -613,6 +641,12 @@
     };
 
     let activeLayer = L.tileLayer(layers.black, tileOptions).addTo(map);
+
+    // --- Автоопределение реального размера карты по сетке тайлов ---
+    // Мы не знаем точные размеры исходной карты, поэтому "прощупываем"
+    // тайлы на базовом зуме: пробуем грузить картинки по возрастающим
+    // индексам X и Y, пока они существуют, и так находим границы сетки.
+
     function tileExists(url) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -626,6 +660,7 @@
       return template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
     }
 
+    // Экспоненциальный + бинарный поиск последнего существующего индекса
     async function findMaxIndex(makeUrl) {
       if (!(await tileExists(makeUrl(0)))) return -1;
       let lo = 0, hi = 1;
@@ -646,6 +681,8 @@
       const maxY = await findMaxIndex(y => tileUrl(layers.black, baseZoom, 0, y));
 
       if (maxX < 0 || maxY < 0) {
+        // Не удалось определить сетку (например, из-за CORS/сети) —
+        // оставляем карту как есть, без жёстких границ.
         return;
       }
 
@@ -663,11 +700,14 @@
       map.setMaxBounds(bounds);
       map.options.maxBoundsViscosity = 1.0;
 
+      // Начальный зум на 1 уровень ближе, чем минимальный (меньше чёрных полос по краям)
       const initialZoom = Math.min(baseZoom + 1, map.getMaxZoom());
       map.setView(center, initialZoom);
     }
 
     detectExtentAndLockCamera();
+
+    // ================= DISCORD LOGIN (логика) =================
     function discordRedirectUri() {
       return window.location.origin + window.location.pathname;
     }
@@ -686,6 +726,7 @@
       if (user.avatar) {
         return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
       }
+      // Аватар по умолчанию, если пользователь его не поставил
       const fallbackIndex = (user.discriminator && user.discriminator !== '0')
         ? Number(user.discriminator) % 5
         : Number(BigInt(user.id) >> 22n) % 6;
@@ -739,6 +780,7 @@
     }
 
     async function initDiscordAuth() {
+      // Если мы только что вернулись от Discord — токен лежит в хэше ссылки
       const hashParams = new URLSearchParams(window.location.hash.slice(1));
       const tokenFromRedirect = hashParams.get('access_token');
       if (tokenFromRedirect) {
@@ -769,6 +811,8 @@
     authControl.addTo(map);
 
     initDiscordAuth();
+    // ============================================================
+
     const switcher = L.control({position:'topright'});
     switcher.onAdd = function() {
       const div = L.DomUtil.create('div', 'layer-switcher');
@@ -805,6 +849,7 @@
       };
     },0);
 
+    // ================= КВАДРАТЫ (общие метки на карте) =================
     const squareMarkers = {}; // id -> L.marker
 
     function hexToRgba(hex, alpha) {
@@ -823,6 +868,10 @@
       const borderColor = (data && data.borderColor) || '#ffffff';
       const opacity = (data && data.opacity != null) ? data.opacity : 1;
       const color = (data && data.color) || '#ff5252';
+      // Прозрачность применяется только к заливке (через rgba), а не к обводке —
+      // обводка остаётся полностью непрозрачной. Фиксированный пиксельный
+      // размер иконки (iconSize) в сочетании с zoomAnimation:false на карте
+      // гарантирует, что квадрат не меняет размер при масштабировании.
       return L.divIcon({
         className: '',
         html: `<div class="map-square" style="width:${size}px;height:${size}px;background:${hexToRgba(color, opacity)};border:${borderWidth}px solid ${borderColor};"></div>`,
@@ -831,8 +880,12 @@
       });
     }
 
-    let squareModeActive = false; 
-    const squareData = {};
+    let squareModeActive = false; // редактирование/добавление квадратов включается только этой кнопкой
+    const squareData = {}; // id -> последние данные с сервера (используется для блокировки, инфо-панели и т.д.)
+
+    // По умолчанию квадрат считается заблокированным (locked !== false), пока
+    // админ явно не разблокирует его в редакторе — это защищает от случайных
+    // сдвигов при обычных кликах.
     function isSquareLocked(data) {
       return !data || data.locked !== false;
     }
@@ -850,6 +903,8 @@
         marker.on('click', () => {
           const current = squareData[id] || {};
           if (window.isAdmin && squareModeActive) {
+            // Если этот же квадрат уже открыт в редакторе — не перезаписываем
+            // несохранённые изменения его настроек повторным открытием.
             if (editingSquareId === id) return;
             openSquareEditor(id, marker.getLatLng(), current);
           } else {
@@ -857,6 +912,9 @@
           }
         });
 
+        // Обновляем позицию в реальном времени прямо во время перетаскивания
+        // (с небольшим троттлингом), а не только по его завершении — так все
+        // остальные посетители видят перемещение квадрата live.
         marker.on('dragstart', () => { marker._localDragging = true; });
         let dragThrottle = null;
         marker.on('drag', () => {
@@ -872,6 +930,12 @@
         });
         squareMarkers[id] = marker;
       } else {
+        // ВАЖНО: пока сам пользователь тащит этот квадрат мышью, игнорируем
+        // приходящее из Firebase эхо собственных же промежуточных обновлений
+        // позиции. Раньше setIcon()/setLatLng() здесь пересоздавали DOM-иконку
+        // прямо во время активного перетаскивания и рассинхронизировали её с
+        // внутренним обработчиком drag у Leaflet — визуально это выглядело
+        // так, будто после разблокировки квадрат "багует" и перестаёт двигаться.
         if (marker._localDragging) return;
         marker.setLatLng([data.lat, data.lng]);
         marker.setIcon(squareIcon(data));
@@ -983,6 +1047,10 @@
     function updateDeleteButtonVisibility() {
       deleteBtn.classList.toggle('hidden', !editingSquareId || !window.canDeleteSquares);
     }
+
+    // Пока режим добавления/редактирования включён кнопкой "Квадрат", любой
+    // клик по свободному месту карты создаёт новый квадрат (можно ставить
+    // несколько подряд, не нажимая кнопку заново).
     function handleMapClickForSquare(e) {
       if (!squareModeActive || !window.isAdmin) return;
       openSquareEditor(null, e.latlng, {});
@@ -1037,6 +1105,9 @@
     };
     document.getElementById('squareCancelBtn').onclick = closeSquareEditor;
     document.getElementById('squareCloseBtn').onclick = closeSquareEditor;
+    // ====================================================================
+
+    // --- Инфо-панель квадрата (показывается всем при клике вне режима редактирования) ---
     const squareInfoEl = document.getElementById('squareInfoModal');
     const squareInfoBackdropEl = document.getElementById('squareInfoBackdrop');
     const squareInfoIconEl = document.getElementById('squareInfoIcon');
@@ -1047,6 +1118,8 @@
     function formatTimestamp(ts) {
       if (!ts) return '';
       const d = new Date(ts);
+      // Всегда московское время (МСК, UTC+3), независимо от часового пояса
+      // браузера посетителя.
       const parts = new Intl.DateTimeFormat('ru-RU', {
         timeZone: 'Europe/Moscow',
         day: '2-digit', month: '2-digit', year: 'numeric',
@@ -1077,6 +1150,7 @@
 
     document.getElementById('squareInfoCloseBtn').onclick = closeSquareInfo;
     squareInfoBackdropEl.onclick = closeSquareInfo;
+    // ====================================================================
   </script>
 </body>
 </html>
