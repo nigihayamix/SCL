@@ -47,7 +47,8 @@
       gap: 8px;
       min-height: 20px;
     }
-    .auth-widget img { width: 28px; height: 28px; border-radius: 50%; display:block; }
+    .auth-widget .auth-name { white-space: nowrap; }
+    .auth-widget img { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; display:block; }
     .auth-widget button {
       border: 0; border-radius: 8px; padding: 7px 10px;
       color: #ddd; background: #2b2b2b; cursor: pointer; font-size: 13px;
@@ -98,8 +99,9 @@
     }
     .map-square-label {
       position: absolute;
-      left: 50%; top: 50%;
-      transform: translate(-50%, -50%);
+      left: 50%; bottom: 100%;
+      margin-bottom: 6px;
+      transform: translateX(-50%);
       max-width: none;
       white-space: nowrap;
       background: rgba(10,10,12,.85);
@@ -324,8 +326,23 @@
     .square-attack-btn.sent { background: #3a3a3c; cursor: default; }
     .square-attack-btn.blocked { background: #3a3a3c; cursor: not-allowed; color: #999; }
     .info-modal-faction {
-      font-size: 11px; color: #9a9a9a; padding: 0 14px 8px; margin-top: -4px;
+      font-size: 11px; color: #9a9a9a; padding: 12px 14px 0; margin-top: 0;
     }
+    .square-edit-toggle-btn {
+      flex: 1; border: 0; border-radius: 10px; padding: 10px; margin-left: 8px;
+      background: #2b2b2d; color: #ddd; cursor: pointer; font-size: 13px; font-weight: 600;
+    }
+    .square-edit-toggle-btn:hover { background: #38383a; }
+    .square-edit-toggle-btn.hidden { display: none; }
+    .square-edit-panel { padding: 0 14px 14px; flex-direction: column; gap: 8px; }
+    .square-edit-row { display: flex; align-items: center; gap: 6px; }
+    .square-edit-row label { width: 92px; font-size: 11px; color: #9a9a9a; flex-shrink: 0; }
+    .square-edit-row select { flex: 1; min-width: 0; background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 8px; color: #eee; padding: 6px; font-size: 12px; }
+    .square-edit-row input[type="color"] { flex: 1; height: 30px; border: 0; background: none; padding: 0; }
+    .square-edit-row button { border: 0; border-radius: 8px; padding: 7px 9px; background: #5865F2; color: #fff; cursor: pointer; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+    .square-edit-check { font-size: 11px; color: #aaa; display: flex; gap: 6px; align-items: center; }
+    .square-edit-status { font-size: 11px; color: #8ee08e; min-height: 14px; }
+    .square-edit-status.err { color: #e07070; }
     .square-info-error {
       margin: 0 14px 14px; padding: 8px 10px; border-radius: 8px;
       background: rgba(168,58,58,.15); border: 1px solid rgba(168,58,58,.4);
@@ -455,6 +472,7 @@
 
     .battle-history-modal { width: 360px; }
     .battle-history-body { max-height: 60vh; overflow-y: auto; }
+    .battle-history-item-winner { font-size: 12px; font-weight: 600; color: #ffd166; margin-top: 4px; }
     .battle-history-toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
     .battle-history-clear-btn {
       border: 0; border-radius: 8px; padding: 6px 10px; font-size: 11px; font-weight: 600;
@@ -493,16 +511,6 @@
       z-index: 6; pointer-events: none; display: none;
       font-variant-numeric: tabular-nums;
     }
-    /* Отдельная кнопка "Напасть" прямо на квадрате (по наведению) — не
-       требует открытия инфо-панели. Показывается только когда атака
-       разрешена (класс enabled добавляется/убирается из JS). */
-    .square-quick-attack {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-      font-size: 12px; color: #fff; background: rgba(168,58,58,0); border-radius: 3px;
-      opacity: 0; cursor: pointer; transition: opacity .15s ease, background .15s ease;
-      z-index: 7;
-    }
-    .map-square:hover .square-quick-attack.enabled { opacity: 1; background: rgba(168,58,58,.6); }
   </style>
 </head>
 <body>
@@ -585,6 +593,26 @@
     </div>
     <div class="info-modal-actions" id="squareInfoActions">
       <button type="button" class="square-attack-btn hidden" id="squareAttackBtn">⚔ Напасть</button>
+      <button type="button" class="square-edit-toggle-btn hidden" id="squareEditToggleBtn">✏ Редактировать</button>
+    </div>
+    <div class="square-edit-panel" id="squareEditPanel" style="display:none;">
+      <div class="square-edit-row">
+        <label>Передать фракции</label>
+        <select id="sqEditFaction"></select>
+        <button type="button" id="sqEditTransferBtn">Передать</button>
+      </div>
+      <div class="square-edit-row">
+        <label>Цвет квадрата</label>
+        <input type="color" id="sqEditColor" value="#ff5252">
+        <button type="button" id="sqEditRecolorBtn">Перекрасить</button>
+      </div>
+      <div class="square-edit-row">
+        <label>Победитель</label>
+        <select id="sqEditWinner"></select>
+        <button type="button" id="sqEditWinnerBtn">Определить</button>
+      </div>
+      <label class="square-edit-check"><input type="checkbox" id="sqEditWinnerTransfer" checked> Передать квадрат победителю и перекрасить</label>
+      <div class="square-edit-status" id="sqEditStatus"></div>
     </div>
     <div class="square-info-error" id="squareInfoError"></div>
     <div class="info-modal-footer" id="squareInfoFooter"></div>
@@ -793,21 +821,27 @@
       window.canManageRoles = perms.manageRoles;
       window.canAttackSquares = perms.attackSquares;
       window.currentPerms = perms;
+      // Право "Редактировать" (передача квадрата, перекраска, победитель) —
+      // владелец сайта и роли stadmin/admin.
+      const roleKey = String(perms.roleName || '').trim().toLowerCase();
+      const roleIdKey = String(perms.roleId || '').trim().toLowerCase();
+      window.canEditSquareResult = !!(perms.owner || ['stadmin', 'admin'].includes(roleKey) || ['stadmin', 'admin'].includes(roleIdKey));
       if (!perms.manageSquares && typeof setSquareModeActive === 'function') setSquareModeActive(false);
       if (!perms.manageRoles && typeof closeAdminPanel === 'function') closeAdminPanel();
       if (addSquareBtnEl) addSquareBtnEl.classList.toggle('hidden-btn', !perms.manageSquares);
       const gearBtn = authWidgetEl && authWidgetEl.querySelector('#adminGearBtn');
       if (gearBtn) gearBtn.style.display = perms.manageRoles ? 'flex' : 'none';
-      updateRoleBadge(perms);
-      if (currentUser && isOwnerId(currentUser.id) && typeof seedDefaultLeaderRoles === 'function') seedDefaultLeaderRoles();
-      if (typeof refreshSquaresInteractivity === 'function') refreshSquaresInteractivity();
-      if (typeof updateDeleteButtonVisibility === 'function') updateDeleteButtonVisibility();
-      if (typeof updateAttackButtonVisibility === 'function') updateAttackButtonVisibility();
-      if (typeof updateCombatBadges === 'function') updateCombatBadges();
-      // try/catch: при самом раннем вызове (до объявления этих переменных ниже по скрипту) просто пропускаем
-      try { updateCooldownTimers(); } catch (e) {}
-      try { renderBattleHistory(); } catch (e) {}
-      if (adminPanelOpen && typeof renderAdminPanelContent === 'function') renderAdminPanelContent();
+      const safe = (fn) => { try { fn(); } catch (e) { console.error(e); } };
+      safe(() => updateRoleBadge(perms));
+      safe(() => { if (currentUser && isOwnerId(currentUser.id) && typeof seedDefaultLeaderRoles === 'function') seedDefaultLeaderRoles(); });
+      safe(() => refreshSquaresInteractivity());
+      safe(() => updateDeleteButtonVisibility());
+      safe(() => updateAttackButtonVisibility());
+      safe(() => updateCombatBadges());
+      safe(() => updateCooldownTimers());
+      safe(() => renderBattleHistory());
+      safe(() => updateSquareEditVisibility());
+      safe(() => { if (adminPanelOpen) renderAdminPanelContent(); });
       return perms;
     }
 
@@ -1293,7 +1327,7 @@
 
       authWidgetEl.innerHTML = `
         <img src="${discordAvatarUrl(user)}" alt="">
-        <span>${escapeHtml(user.global_name || user.username)}</span>
+        <span class="auth-name">${escapeHtml(user.global_name || user.username || user.id || 'Пользователь')}</span>
         <span class="combat-status-badge hidden" id="combatStatusBadge">
           <span class="combat-badge attack hidden" id="combatAttackBadge" title="Атак сегодня">⚔ 0/0</span>
           <span class="combat-badge defense hidden" id="combatDefenseBadge" title="Получено защиты сегодня">🛡 0/0</span>
@@ -1496,12 +1530,9 @@
       // текст и видимость обновляются отдельно, каждую секунду, функцией
       // updateCooldownTimers(), без пересоздания иконки (см. ниже).
       const cooldownHtml = `<span class="square-cooldown"></span>`;
-      // Отдельная кнопка "Напасть" прямо на квадрате (видна по наведению) —
-      // работает независимо от инфо-панели, см. quickAttackSquare().
-      const quickAttackHtml = `<span class="square-quick-attack" data-quick-attack-id="${escapeHtml(String(id || ''))}" title="Напасть">⚔</span>`;
       return L.divIcon({
         className: '',
-        html: `<div class="map-square" style="width:${size}px;height:${size}px;background:${hexToRgba(color, opacity)};border:${borderWidth}px solid ${borderColor};">${labelHtml}${factionIconHtml}${cooldownHtml}${quickAttackHtml}</div>`,
+        html: `<div class="map-square" style="width:${size}px;height:${size}px;background:${hexToRgba(color, opacity)};border:${borderWidth}px solid ${borderColor};">${labelHtml}${factionIconHtml}${cooldownHtml}</div>`,
         iconSize: [size, size],
         iconAnchor: [size / 2, size / 2]
       });
@@ -1541,20 +1572,6 @@
           }
         });
 
-        // Отдельная кнопка "Напасть" прямо на квадрате (по наведению) —
-        // работает в обход инфо-панели. Клик по ней не должен также
-        // открывать инфо-панель/редактор через marker 'click' выше.
-        marker.on('add', () => {
-          const el = marker.getElement();
-          const btn = el && el.querySelector('.square-quick-attack');
-          if (!btn) return;
-          L.DomEvent.on(btn, 'click', (e) => {
-            L.DomEvent.stopPropagation(e);
-            L.DomEvent.preventDefault(e);
-            quickAttackSquare(id);
-          });
-        });
-
         // Обновляем позицию в реальном времени прямо во время перетаскивания
         // (с небольшим троттлингом), а не только по его завершении — так все
         // остальные посетители видят перемещение квадрата live.
@@ -1582,17 +1599,6 @@
         if (marker._localDragging) return;
         marker.setLatLng([data.lat, data.lng]);
         marker.setIcon(squareIcon(data, id));
-        // setIcon() пересоздаёт DOM квадрата, поэтому обработчик клика на
-        // кнопке "Напасть" нужно навесить заново.
-        const el = marker.getElement();
-        const btn = el && el.querySelector('.square-quick-attack');
-        if (btn) {
-          L.DomEvent.on(btn, 'click', (e) => {
-            L.DomEvent.stopPropagation(e);
-            L.DomEvent.preventDefault(e);
-            quickAttackSquare(id);
-          });
-        }
       }
     }
 
@@ -1618,7 +1624,6 @@
         const el = marker.getElement();
         if (!el) return;
         const cdEl = el.querySelector('.square-cooldown');
-        const quickBtn = el.querySelector('.square-quick-attack');
         const remaining = data.lastAttackedAt ? (ATTACK_COOLDOWN_MS - (now - data.lastAttackedAt)) : 0;
         if (cdEl) {
           if (remaining > 0) {
@@ -1629,18 +1634,6 @@
             cdEl.style.display = 'block';
           } else {
             cdEl.style.display = 'none';
-          }
-        }
-        if (quickBtn) {
-          const canShow = !!window.canAttackSquares && !!currentUser;
-          if (!canShow) {
-            quickBtn.style.display = 'none';
-            quickBtn.classList.remove('enabled');
-          } else {
-            quickBtn.style.display = '';
-            const block = getAttackBlockReasonFor(id, data);
-            quickBtn.classList.toggle('enabled', !block);
-            quickBtn.title = block ? block.full : 'Напасть';
           }
         }
       });
@@ -1898,6 +1891,7 @@
         attackerId: currentUser.id,
         attackerName,
         attackerRole: perms.roleName || null,
+        attackerFaction: perms.faction || null,
         squareId: id,
         squareLabel,
         squareFaction: squareFaction || null,
@@ -1912,28 +1906,6 @@
         if (typeof updateCombatBadges === 'function') updateCombatBadges();
         if (typeof updateCooldownTimers === 'function') updateCooldownTimers();
         return res;
-      });
-    }
-
-    // Отдельная кнопка "Напасть" прямо на квадрате (по наведению, в обход
-    // инфо-панели). Если атака заблокирована — открываем инфо-панель, чтобы
-    // показать причину, вместо того чтобы молча ничего не делать.
-    function quickAttackSquare(id) {
-      if (!window.canAttackSquares || !currentUser) return;
-      const data = squareData[id] || {};
-      const block = getAttackBlockReasonFor(id, data);
-      if (block) {
-        openSquareInfo(id, data);
-        squareInfoErrorEl.textContent = block.full;
-        squareInfoErrorEl.classList.add('visible');
-        return;
-      }
-      performAttack(id, data).catch((err) => {
-        console.error(err);
-        openSquareInfo(id, data);
-        const msg = (err && err.message) ? err.message : String(err);
-        squareInfoErrorEl.textContent = 'Не удалось записать атаку: ' + msg;
-        squareInfoErrorEl.classList.add('visible');
       });
     }
 
@@ -1982,7 +1954,9 @@
       squareInfoErrorEl.classList.remove('visible');
       squareInfoErrorEl.textContent = '';
       squareAttackBtnEl.classList.remove('sent', 'blocked');
+      squareEditPanelEl.style.display = 'none';
       updateAttackButtonVisibility();
+      updateSquareEditVisibility();
       squareInfoEl.classList.add('visible');
       squareInfoBackdropEl.classList.add('visible');
     }
@@ -2016,6 +1990,91 @@
         squareInfoErrorEl.textContent = 'Не удалось записать атаку: ' + msg + '. Скорее всего, в правилах Firebase не разрешена запись в узлы "battleHistory"/"roleUsage"/"squares" — обновите Realtime Database Rules (аналогично тому, как это было сделано для "roles"/"userRoles").';
         squareInfoErrorEl.classList.add('visible');
       });
+    };
+
+
+    // --- "Редактировать" в окне квадрата (stadmin/admin/владелец): передать
+    // квадрат фракции, перекрасить, определить победителя последней атаки. ---
+    const squareEditToggleBtnEl = document.getElementById('squareEditToggleBtn');
+    const squareEditPanelEl = document.getElementById('squareEditPanel');
+    const sqEditStatusEl = document.getElementById('sqEditStatus');
+    const FACTION_COLORS = {};
+    Object.keys(DEFAULT_LEADER_ROLES).forEach((k) => {
+      const r = DEFAULT_LEADER_ROLES[k];
+      if (r.rank === 'LEADER') FACTION_COLORS[r.faction] = r.color;
+    });
+
+    function sqEditMsg(text, isErr) {
+      sqEditStatusEl.textContent = text || '';
+      sqEditStatusEl.classList.toggle('err', !!isErr);
+    }
+    function latestAttackFor(squareId) {
+      let best = null;
+      Object.keys(battleHistoryData).forEach((k) => {
+        const it = battleHistoryData[k];
+        if (it && it.squareId === squareId && !it.winner && (!best || (it.createdAt || 0) > (best.item.createdAt || 0))) best = { key: k, item: it };
+      });
+      return best;
+    }
+    function fillSquareEditPanel() {
+      const data = squareData[infoSquareId] || infoSquareData || {};
+      const opts = FACTIONS.map((f) => `<option value="${f}">${FACTION_ICONS[f] || ''} ${f}</option>`).join('');
+      document.getElementById('sqEditFaction').innerHTML = '<option value="">— без фракции —</option>' + opts;
+      document.getElementById('sqEditFaction').value = data.faction || '';
+      document.getElementById('sqEditColor').value = /^#[0-9a-f]{6}$/i.test(data.color || '') ? data.color : '#ff5252';
+      const att = latestAttackFor(infoSquareId);
+      const cands = [];
+      if (att && att.item.attackerFaction) cands.push(att.item.attackerFaction);
+      if (data.faction && !cands.includes(data.faction)) cands.push(data.faction);
+      const list = cands.length ? cands : FACTIONS;
+      document.getElementById('sqEditWinner').innerHTML = list.map((f) => `<option value="${f}">${FACTION_ICONS[f] || ''} ${f}</option>`).join('');
+      sqEditMsg('');
+    }
+    function updateSquareEditVisibility() {
+      const show = !!window.canEditSquareResult && !!currentUser && !!infoSquareId;
+      squareEditToggleBtnEl.classList.toggle('hidden', !show);
+      if (!show) squareEditPanelEl.style.display = 'none';
+    }
+    squareEditToggleBtnEl.onclick = () => {
+      const open = squareEditPanelEl.style.display === 'none';
+      if (open) fillSquareEditPanel();
+      squareEditPanelEl.style.display = open ? 'flex' : 'none';
+    };
+    function sqEditApply(fields, okText) {
+      if (!window.canEditSquareResult || !infoSquareId) return Promise.resolve();
+      return squaresRef.child(infoSquareId).update(Object.assign({ updatedAt: firebase.database.ServerValue.TIMESTAMP }, fields))
+        .then(() => sqEditMsg(okText)).catch((e) => sqEditMsg('Ошибка: ' + ((e && e.message) || e), true));
+    }
+    document.getElementById('sqEditTransferBtn').onclick = () => {
+      const f = document.getElementById('sqEditFaction').value;
+      const fields = { faction: f || null };
+      if (f && FACTION_COLORS[f]) fields.color = FACTION_COLORS[f];
+      sqEditApply(fields, f ? `Квадрат передан фракции ${f}` : 'Фракция снята');
+    };
+    document.getElementById('sqEditRecolorBtn').onclick = () => {
+      sqEditApply({ color: document.getElementById('sqEditColor').value }, 'Квадрат перекрашен');
+    };
+    document.getElementById('sqEditWinnerBtn').onclick = () => {
+      if (!window.canEditSquareResult || !infoSquareId) return;
+      const winner = document.getElementById('sqEditWinner').value;
+      const att = latestAttackFor(infoSquareId);
+      if (!att) { sqEditMsg('В истории нет атаки без результата на этот квадрат', true); return; }
+      const sqLabel = (infoSquareData && infoSquareData.label) || 'Без названия';
+      const tasks = [battleHistoryRef.child(att.key).update({
+        winner,
+        winnerSetBy: currentUser.global_name || currentUser.username,
+        winnerSetAt: firebase.database.ServerValue.TIMESTAMP
+      })];
+      if (document.getElementById('sqEditWinnerTransfer').checked) {
+        const cur = (squareData[infoSquareId] || {}).faction;
+        if (winner && winner !== cur) {
+          const fields = { faction: winner, updatedAt: firebase.database.ServerValue.TIMESTAMP };
+          if (FACTION_COLORS[winner]) fields.color = FACTION_COLORS[winner];
+          tasks.push(squaresRef.child(infoSquareId).update(fields));
+        }
+      }
+      Promise.all(tasks).then(() => sqEditMsg(`Победила фракция ${winner} («${sqLabel}»)`))
+        .catch((e) => sqEditMsg('Ошибка: ' + ((e && e.message) || e), true));
     };
 
     function closeSquareInfo() {
@@ -2090,6 +2149,7 @@
           <div class="battle-history-item">
             <div class="battle-history-item-title">${title}</div>
             ${desc ? `<div class="battle-history-item-desc">${desc}</div>` : ''}
+            ${item.winner ? `<div class="battle-history-item-winner">🏆 Победила фракция ${escapeHtml(item.winner)}</div>` : ''}
             ${dateStr ? `<div class="battle-history-item-date">${dateStr}</div>` : ''}
           </div>
         `;
