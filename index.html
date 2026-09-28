@@ -394,7 +394,7 @@
     }
     .square-info-error.visible { display: block; }
 
-    .admin-panel { width: 380px; }
+    .admin-panel { width: 440px; max-width: 96vw; }
     .admin-panel-body { max-height: 60vh; overflow-y: auto; }
     .admin-section { margin-bottom: 18px; }
     .admin-section:last-child { margin-bottom: 0; }
@@ -581,8 +581,47 @@
     /* Идёт отсчёт до начала атаки — цветной огонь */
     .square-cooldown.pending .square-fire { animation: fireFlicker .9s ease-in-out infinite alternate; }
     /* Атака началась, идёт КД — тот же огонь, но белый */
-    .square-cooldown.cooling .square-fire { filter: brightness(0) invert(1); opacity: .75; }
+    /* Защита (квадрат/фракцию атаковали — напасть на неё можно только после таймера) */
+    .square-cooldown.defense .square-fire { opacity: .9; }
+    .square-cooldown.defense .square-cooldown-text { color: #cfe6ff; }
+    /* КД атаки (фракция сама напала — следующая атака только после таймера) */
+    .square-cooldown.attack .square-fire { opacity: .9; }
+    .square-cooldown.attack .square-cooldown-text { color: #ffd9a8; }
     @keyframes fireFlicker { from { transform: translate(-50%, -52%) scale(.92); } to { transform: translate(-50%, -56%) scale(1.1); } }
+
+    .square-editor-actions { flex-wrap: wrap; }
+
+    /* Группы ролей (выпадающие списки) */
+    .role-group { margin-bottom: 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: rgba(255,255,255,.02); }
+    .role-group > summary { cursor: pointer; padding: 9px 12px; font-size: 12px; font-weight: 600; color: #ddd; list-style: none; user-select: none; }
+    .role-group > summary::-webkit-details-marker { display: none; }
+    .role-group > summary::before { content: '▸'; display: inline-block; margin-right: 8px; color: #9a9a9a; transition: transform .15s ease; }
+    .role-group[open] > summary::before { transform: rotate(90deg); }
+    .role-group-count { margin-left: 6px; padding: 1px 7px; border-radius: 10px; background: #2b2b30; color: #9a9a9a; font-size: 10px; }
+    .role-group > .roles-list { padding: 0 12px 6px; }
+    .role-lock { font-size: 12px; opacity: .6; cursor: help; flex-shrink: 0; }
+    .role-restore-btn { width: 100%; border: 0; border-radius: 8px; padding: 8px; background: #2b2b2d; color: #ddd; cursor: pointer; font-size: 11px; margin-top: 4px; }
+    .role-restore-btn:hover { background: #3a3a3c; }
+
+    /* Пользователи с ролями: ID копируется по клику, роль меняется на месте */
+    .assigned-users-list { max-height: 280px; }
+    .assigned-user-row { flex-wrap: wrap; }
+    .assigned-user-row .u-main { flex: 1; min-width: 110px; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+    .assigned-user-row .u-main .u-name { flex: none; }
+    .u-id { align-self: flex-start; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 10px; color: #8b93ff; background: rgba(88,101,242,.12); border-radius: 6px; padding: 2px 6px; cursor: pointer; user-select: all; }
+    .u-id:hover { background: rgba(88,101,242,.25); }
+    .u-id.copied { color: #6fd08c; background: rgba(59,165,93,.18); }
+    .u-role-select { background: #26262a; border: 1px solid #3a3a3c; border-radius: 6px; color: #eee; font-size: 11px; padding: 4px; max-width: 150px; }
+
+    /* Журнал действий */
+    .admin-logs-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
+    .log-row { background: #1c1c1e; border-radius: 8px; padding: 7px 9px; font-size: 12px; }
+    .log-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 10px; color: #8a8a8f; }
+    .log-user { color: #cfd2ff; font-weight: 600; font-size: 11px; }
+    .log-role { padding: 1px 6px; border-radius: 8px; background: #2b2b30; color: #aaa; }
+    .log-action { color: #eee; margin-top: 3px; font-weight: 600; }
+    .log-details { color: #9a9a9a; margin-top: 2px; word-break: break-word; }
+    #adminLogsClearBtn { background: rgba(168,58,58,.25) !important; color: #e07070 !important; }
   </style>
 </head>
 <body>
@@ -653,6 +692,7 @@
       <button id="squareSaveBtn">💾 Сохранить</button>
       <button id="squareDeleteBtn">🗑 Удалить</button>
       <button id="squareCancelBtn">Отмена</button>
+      <button id="squareNeutralBtn" type="button" style="flex:1 1 100%;" title="Снять фракцию и покрасить в серый (применится после «Сохранить»)">⚪ Сделать нейтральным</button>
     </div>
   </div>
 
@@ -676,7 +716,7 @@
         <label for="attackParticipantsInput">👥 Участников</label>
         <input type="number" id="attackParticipantsInput" min="10" max="20" step="1" placeholder="10–20">
       </div>
-      <div class="square-attack-form-hint">Нападение возможно с 12:30 до 23:30 по Москве, кроме 16:00–16:30 и 20:00–20:30. Реальный старт — через 15 минут после выбранного времени (например, 14:00 → старт в 14:15). Участников — от 10 до 20.</div>
+      <div class="square-attack-form-hint">Нападение возможно с 12:30 до 23:30 по Москве, кроме 16:00–16:30 и 20:00–20:30. Реальный старт — через 15 минут после выбранного времени (например, 14:00 → старт в 14:15). Участников — от 10 до 20. Супер админ может нападать в любое время.</div>
     </div>
     <div class="info-modal-actions" id="squareInfoActions">
       <button type="button" class="square-attack-btn hidden" id="squareAttackBtn">⚔ Напасть</button>
@@ -698,6 +738,10 @@
         <select id="sqEditWinner"></select>
         <button type="button" id="sqEditWinnerBtn">Определить</button>
       </div>
+      <div class="square-edit-row">
+        <label>Нейтральный</label>
+        <button type="button" id="sqEditNeutralBtn" style="flex:1;background:#4a4d5a;">⚪ Сделать нейтральным (серый)</button>
+      </div>
       <label class="square-edit-check"><input type="checkbox" id="sqEditWinnerTransfer" checked> Передать квадрат победителю и перекрасить</label>
       <div class="square-edit-status" id="sqEditStatus"></div>
     </div>
@@ -717,7 +761,8 @@
         <input type="text" id="statsTypeInput" value="type" maxlength="30">
       </div>
       <div id="statsList" class="stats-list"></div>
-      <div class="stats-hint">Материалы начисляются автоматически каждый день в 00:00 по МСК: сумма выработки «📦 в день» всех квадратов фракции.</div>
+      <div class="stats-hint">Материалы не начисляются автоматически. «Тестовое начисление» (stadmin и супер админ) добавляет каждой фракции сумму выработки «📦 в день» её квадратов — один раз за нажатие.</div>
+      <button type="button" class="battle-history-clear-btn" id="statsTestAccrualBtn" style="display:none;margin-top:10px;background:rgba(59,165,93,.18);color:#6fd08c;">🧪 Тестовое начисление</button>
       <button type="button" class="battle-history-clear-btn" id="statsResetBtn" style="display:none;margin-top:10px;">🔄 Сбросить материалы (временно)</button>
     </div>
   </div>
@@ -744,8 +789,9 @@
     </div>
     <div class="info-modal-body admin-panel-body">
       <div class="admin-tabs">
-        <button type="button" class="admin-tab-btn active" data-admin-tab="roles">👥 Управление ролями</button>
+        <button type="button" class="admin-tab-btn active" data-admin-tab="roles">👥 Роли</button>
         <button type="button" class="admin-tab-btn" data-admin-tab="combat">⚔ Атака и защита</button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="logs">📋 Логи</button>
       </div>
 
       <div class="admin-tab-panel active" id="adminTabRoles">
@@ -788,9 +834,27 @@
         <div class="admin-section">
           <div class="admin-section-title">Суточный расход атаки/защиты по ролям</div>
           <div id="combatMgmtList" class="roles-list"></div>
+        </div>
+        <div class="admin-section">
+          <div class="admin-section-title">⏳ КД фракций — атака / защита</div>
+          <div id="factionCdList" class="roles-list"></div>
           <div class="combat-global-actions">
-            <button id="resetAllSquaresCooldownBtn" type="button">⏳ Сбросить КД атаки всех квадратов</button>
+            <button id="resetAllAttackCdBtn" type="button">⚔ Сбросить КД атаки всех</button>
+            <button id="resetAllDefenseCdBtn" type="button">🛡 Сбросить КД защиты всех</button>
           </div>
+          <div class="admin-empty-hint" style="margin-top:6px;">После атаки у фракции-нападающей включается КД атаки (⚔), у защищавшейся — КД защиты (🛡): на её квадраты нельзя напасть, пока таймер не сбросится. Таймер виден на квадратах.</div>
+        </div>
+      </div>
+
+      <div class="admin-tab-panel" id="adminTabLogs">
+        <div class="admin-section">
+          <div class="admin-section-title">📋 Журнал действий</div>
+          <div class="admin-assign-row">
+            <input type="text" id="adminLogsFilter" placeholder="Поиск: имя, действие, ID…">
+            <button type="button" id="adminLogsClearBtn" style="display:none;">🧹 Очистить</button>
+          </div>
+          <div class="admin-empty-hint" id="adminLogsCount" style="margin:6px 0;"></div>
+          <div id="adminLogsList" class="admin-logs-list"></div>
         </div>
       </div>
 
@@ -848,6 +912,47 @@
     let roleUsageData = {};
     let currentUser = null;
 
+    // ---- Новые узлы Firebase (в правилах Realtime Database нужно разрешить
+    // чтение/запись для "adminLogs", "factionCooldowns" и
+    // "settings/deletedSpecialRoles", как и для остальных узлов) ----
+    const adminLogsRef = firebase.database().ref('adminLogs');
+    const factionCooldownsRef = firebase.database().ref('factionCooldowns'); // {FACTION: {attackUntil, defenseUntil}}
+    const specialRolesDeletedRef = firebase.database().ref('settings/deletedSpecialRoles');
+    let adminLogsData = {};
+    let factionCooldowns = {};
+    let deletedSpecialRoles = {};
+    let rolesLoaded = false;
+    let deletedSpecialLoaded = false;
+    const NEUTRAL_COLOR = '#808080'; // цвет нейтрального квадрата (серый)
+
+    // Журнал действий: кто (имя, роль, Discord ID) и что сделал.
+    function logAction(action, details) {
+      if (!currentUser) return Promise.resolve();
+      const perms = window.currentPerms || {};
+      return adminLogsRef.push({
+        ts: firebase.database.ServerValue.TIMESTAMP,
+        userId: currentUser.id,
+        userName: currentUser.global_name || currentUser.username || currentUser.id,
+        role: perms.owner ? 'Супер админ' : (perms.roleName || null),
+        action,
+        details: details || null
+      }).catch(() => {});
+    }
+    function sqName(id) { return (squareData[id] && squareData[id].label) || 'Без названия'; }
+
+    factionCooldownsRef.on('value', (snap) => {
+      factionCooldowns = snap.val() || {};
+      if (typeof updateCooldownTimers === 'function') updateCooldownTimers();
+      if (typeof updateAttackButtonVisibility === 'function') { try { updateAttackButtonVisibility(); } catch (e) {} }
+      if (adminPanelOpen) renderFactionCdList();
+    });
+    specialRolesDeletedRef.on('value', (snap) => {
+      deletedSpecialRoles = snap.val() || {};
+      deletedSpecialLoaded = true;
+      if (currentUser && isOwnerId(currentUser.id)) seedDefaultLeaderRoles();
+      if (adminPanelOpen) renderAdminPanelContent();
+    });
+
     // Список фракций, которые можно назначить квадрату в редакторе, и из
     // которых состоят предустановленные роли лидеров/замов.
     const FACTIONS = ['FIB', 'WN', 'SANG', 'SD', 'EMS', 'LSPD'];
@@ -900,8 +1005,9 @@
     // если роль с таким ключом ещё не создана — безопасно вызывать при
     // каждом входе, ничего не перезатирает.
     function seedDefaultLeaderRoles() {
+      if (!rolesLoaded || !deletedSpecialLoaded) return; // ждём загрузки ролей и списка удалённых особых ролей
       Object.keys(DEFAULT_LEADER_ROLES).forEach((key) => {
-        if (rolesData[key]) return; // уже создана — не трогаем (цвет/лимиты могли поменять вручную)
+        if (rolesData[key] || deletedSpecialRoles[key]) return; // уже создана (или намеренно удалена владельцем) — не трогаем (цвет/лимиты могли поменять вручную)
         rolesRef.child(key).set({
           ...DEFAULT_LEADER_ROLES[key],
           manageSquares: false, deleteSquares: false, manageRoles: false, attackSquares: true,
@@ -956,7 +1062,12 @@
       // владелец сайта и роли stadmin/admin.
       const roleKey = String(perms.roleName || '').trim().toLowerCase();
       const roleIdKey = String(perms.roleId || '').trim().toLowerCase();
-      window.canEditSquareResult = !!(perms.owner || ['stadmin', 'admin'].includes(roleKey) || ['stadmin', 'admin'].includes(roleIdKey));
+      // Редактирование квадрата — владелец + роли adm / admin / stadmin / stadm.
+      const EDIT_ROLES = ['adm', 'admin', 'stadmin', 'stadm'];
+      const TEST_ACCRUAL_ROLES = ['stadmin', 'stadm'];
+      window.canEditSquareResult = !!(perms.owner || EDIT_ROLES.includes(roleKey) || EDIT_ROLES.includes(roleIdKey));
+      // Тестовое начисление материалов — супер админ и stadmin.
+      window.canTestAccrual = !!(perms.owner || TEST_ACCRUAL_ROLES.includes(roleKey) || TEST_ACCRUAL_ROLES.includes(roleIdKey));
       if (!perms.manageSquares && typeof setSquareModeActive === 'function') setSquareModeActive(false);
       if (!perms.manageRoles && typeof closeAdminPanel === 'function') closeAdminPanel();
       if (addSquareBtnEl) addSquareBtnEl.classList.toggle('hidden-btn', !perms.manageSquares);
@@ -1009,6 +1120,7 @@
 
     rolesRef.on('value', (snap) => {
       rolesData = snap.val() || {};
+      rolesLoaded = true;
       if (currentUser) applyCurrentPermissions();
       if (adminPanelOpen) renderAdminPanelContent();
     });
@@ -1035,14 +1147,17 @@
       btn.onclick = () => {
         adminPanelEl.querySelectorAll('.admin-tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
         const tab = btn.dataset.adminTab;
-        document.getElementById('adminTabRoles').classList.toggle('active', tab === 'roles');
-        document.getElementById('adminTabCombat').classList.toggle('active', tab === 'combat');
+        const panelId = 'adminTab' + tab.charAt(0).toUpperCase() + tab.slice(1);
+        adminPanelEl.querySelectorAll('.admin-tab-panel').forEach((p) => p.classList.toggle('active', p.id === panelId));
+        if (tab === 'logs') { subscribeAdminLogs(); renderAdminLogs(); }
+        if (tab === 'combat') renderFactionCdList();
       };
     });
 
     function openAdminPanel() {
       if (!window.canManageRoles) return;
       adminPanelOpen = true;
+      subscribeAdminLogs();
       renderAdminPanelContent();
       adminPanelEl.classList.add('visible');
       adminPanelBackdropEl.classList.add('visible');
@@ -1055,62 +1170,133 @@
     document.getElementById('adminPanelCloseBtn').onclick = closeAdminPanel;
     adminPanelBackdropEl.onclick = closeAdminPanel;
 
+    // ---- Роли: группы "Созданные" и "Особые" (LEADER / DEP) ----
+    let roleGroupOpen = { custom: true, special: false };
+    const PERM_LABELS = { manageSquares: 'Добавление/правка', deleteSquares: 'Удаление', attackSquares: 'Атака', manageRoles: 'Роли', notifyOnAttack: 'Уведомлять' };
+    function isSpecialRole(id) { return Object.prototype.hasOwnProperty.call(DEFAULT_LEADER_ROLES, id); }
+    function roleLabel(id) { const r = rolesData[id]; return r ? ((r.icon ? r.icon + ' ' : '') + (r.name || id)) : '—'; }
+    function roleNameOf(id) { return (rolesData[id] && rolesData[id].name) || id || '—'; }
+    function userNameOf(uid) { return (userRolesData[uid] && userRolesData[uid].username) || 'без имени'; }
+    function roleOptionsHtml(selected, withEmpty) {
+      const ids = Object.keys(rolesData);
+      const opt = (id) => `<option value="${escapeHtml(id)}"${id === selected ? ' selected' : ''}>${escapeHtml(roleLabel(id))}</option>`;
+      const custom = ids.filter((id) => !isSpecialRole(id));
+      const special = ids.filter(isSpecialRole);
+      let html = withEmpty ? '<option value="" selected disabled>— нет роли —</option>' : '';
+      if (custom.length) html += `<optgroup label="Созданные роли">${custom.map(opt).join('')}</optgroup>`;
+      if (special.length) html += `<optgroup label="Особые роли">${special.map(opt).join('')}</optgroup>`;
+      return html || '<option value="">Сначала создайте роль</option>';
+    }
+
+    function roleRowHtml(roleId) {
+      const role = rolesData[roleId] || {};
+      const special = isSpecialRole(roleId);
+      const isOwner = !!(window.currentPerms && window.currentPerms.owner);
+      const factionTag = role.faction ? `${escapeHtml(role.faction)}${role.rank ? ' · ' + escapeHtml(role.rank) : ''}` : '';
+      const rid = escapeHtml(roleId);
+      const deleteHtml = (!special || isOwner)
+        ? `<button type="button" class="role-delete-btn" data-role-id="${rid}" title="${special ? 'Удалить особую роль (может только супер админ)' : 'Удалить роль'}">✕</button>`
+        : `<span class="role-lock" title="Особую роль может удалить только супер админ">🔒</span>`;
+      return `
+        <div class="role-row">
+          <input type="text" class="role-icon-input" value="${escapeHtml(role.icon || '')}" data-role-id="${rid}" maxlength="4" placeholder="🛡" title="Иконка роли">
+          <input type="color" class="role-color-input" value="${escapeHtml(role.color || '#5865F2')}" data-role-id="${rid}" title="Цвет роли">
+          <input type="text" class="role-name-input" value="${escapeHtml(role.name || '')}" data-role-id="${rid}">
+          ${factionTag ? `<span class="role-faction-tag">${factionTag}</span>` : ''}
+          <label class="role-perm-toggle"><input type="checkbox" data-perm="manageSquares" data-role-id="${rid}" ${role.manageSquares ? 'checked' : ''}> Добавление/правка</label>
+          <label class="role-perm-toggle"><input type="checkbox" data-perm="deleteSquares" data-role-id="${rid}" ${role.deleteSquares ? 'checked' : ''}> Удаление</label>
+          <label class="role-perm-toggle"><input type="checkbox" data-perm="attackSquares" data-role-id="${rid}" ${role.attackSquares ? 'checked' : ''}> Атака</label>
+          <label class="role-perm-toggle"><input type="checkbox" data-perm="manageRoles" data-role-id="${rid}" ${role.manageRoles ? 'checked' : ''}> Роли</label>
+          <label class="role-perm-toggle" title="Участники этой роли получат упоминание в Discord, когда атакуют квадрат их фракции"><input type="checkbox" data-perm="notifyOnAttack" data-role-id="${rid}" ${role.notifyOnAttack ? 'checked' : ''}> 🔔 Уведомлять</label>
+          <span class="role-limit-group">⚔ <input type="number" min="0" max="20" class="role-limit-input" data-limit="attacksPerDay" data-role-id="${rid}" value="${role.attacksPerDay != null ? role.attacksPerDay : ''}" placeholder="∞"> / день</span>
+          <span class="role-limit-group">🛡 <input type="number" min="0" max="20" class="role-limit-input" data-limit="defensesPerDay" data-role-id="${rid}" value="${role.defensesPerDay != null ? role.defensesPerDay : ''}" placeholder="∞"> / день</span>
+          ${deleteHtml}
+        </div>`;
+    }
+
     function renderAdminPanelContent() {
       const rolesListEl = document.getElementById('rolesList');
       const roleIds = Object.keys(rolesData);
-      rolesListEl.innerHTML = '';
-      if (!roleIds.length) {
-        rolesListEl.innerHTML = '<div class="admin-empty-hint">Ролей пока нет — создайте первую ниже.</div>';
-      }
-      roleIds.forEach((roleId) => {
-        const role = rolesData[roleId] || {};
-        const row = document.createElement('div');
-        row.className = 'role-row';
-        const factionTag = role.faction ? `${escapeHtml(role.faction)}${role.rank ? ' · ' + escapeHtml(role.rank) : ''}` : '';
-        row.innerHTML = `
-          <input type="text" class="role-icon-input" value="${escapeHtml(role.icon || '')}" data-role-id="${roleId}" maxlength="4" placeholder="🛡" title="Иконка роли">
-          <input type="color" class="role-color-input" value="${escapeHtml(role.color || '#5865F2')}" data-role-id="${roleId}" title="Цвет роли">
-          <input type="text" class="role-name-input" value="${escapeHtml(role.name || '')}" data-role-id="${roleId}">
-          ${factionTag ? `<span class="role-faction-tag">${factionTag}</span>` : ''}
-          <label class="role-perm-toggle"><input type="checkbox" data-perm="manageSquares" data-role-id="${roleId}" ${role.manageSquares ? 'checked' : ''}> Добавление/правка</label>
-          <label class="role-perm-toggle"><input type="checkbox" data-perm="deleteSquares" data-role-id="${roleId}" ${role.deleteSquares ? 'checked' : ''}> Удаление</label>
-          <label class="role-perm-toggle"><input type="checkbox" data-perm="attackSquares" data-role-id="${roleId}" ${role.attackSquares ? 'checked' : ''}> Атака</label>
-          <label class="role-perm-toggle"><input type="checkbox" data-perm="manageRoles" data-role-id="${roleId}" ${role.manageRoles ? 'checked' : ''}> Роли</label>
-          <label class="role-perm-toggle" title="Участники этой роли получат упоминание в Discord, когда атакуют квадрат их фракции"><input type="checkbox" data-perm="notifyOnAttack" data-role-id="${roleId}" ${role.notifyOnAttack ? 'checked' : ''}> 🔔 Уведомлять</label>
-          <span class="role-limit-group">⚔ <input type="number" min="0" max="20" class="role-limit-input" data-limit="attacksPerDay" data-role-id="${roleId}" value="${role.attacksPerDay != null ? role.attacksPerDay : ''}" placeholder="∞"> / день</span>
-          <span class="role-limit-group">🛡 <input type="number" min="0" max="20" class="role-limit-input" data-limit="defensesPerDay" data-role-id="${roleId}" value="${role.defensesPerDay != null ? role.defensesPerDay : ''}" placeholder="∞"> / день</span>
-          <button type="button" class="role-delete-btn" data-role-id="${roleId}" title="Удалить роль">✕</button>
-        `;
-        rolesListEl.appendChild(row);
+      const isOwner = !!(window.currentPerms && window.currentPerms.owner);
+      const custom = roleIds.filter((id) => !isSpecialRole(id));
+      const special = roleIds.filter(isSpecialRole);
+      const group = (key, title, ids, emptyText) => `
+        <details class="role-group" data-group="${key}"${roleGroupOpen[key] ? ' open' : ''}>
+          <summary>${title}<span class="role-group-count">${ids.length}</span></summary>
+          <div class="roles-list">${ids.length ? ids.map(roleRowHtml).join('') : `<div class="admin-empty-hint" style="padding:6px 0;">${emptyText}</div>`}</div>
+        </details>`;
+      const deletedCount = Object.keys(deletedSpecialRoles).length;
+      rolesListEl.innerHTML =
+        group('custom', '📁 Созданные роли', custom, 'Созданных ролей пока нет — создайте первую ниже.') +
+        group('special', '⭐ Особые роли (LEADER / DEP)', special, 'Все особые роли удалены.') +
+        ((isOwner && deletedCount) ? `<button type="button" class="role-restore-btn" id="restoreSpecialRolesBtn">♻ Восстановить удалённые особые роли (${deletedCount})</button>` : '');
+
+      rolesListEl.querySelectorAll('details.role-group').forEach((d) => {
+        d.addEventListener('toggle', () => { roleGroupOpen[d.dataset.group] = d.open; });
       });
+      const restoreBtn = rolesListEl.querySelector('#restoreSpecialRolesBtn');
+      if (restoreBtn) restoreBtn.onclick = () => {
+        specialRolesDeletedRef.remove()
+          .then(() => logAction('Восстановил удалённые особые роли', `${deletedCount} шт.`))
+          .catch(showAdminError);
+      };
+
       rolesListEl.querySelectorAll('.role-name-input').forEach((inp) => {
-        inp.onchange = () => rolesRef.child(inp.dataset.roleId).update({ name: inp.value.trim() || 'Без имени' }).catch(showAdminError);
+        inp.onchange = () => {
+          const id = inp.dataset.roleId, old = roleNameOf(id), nv = inp.value.trim() || 'Без имени';
+          rolesRef.child(id).update({ name: nv }).then(() => logAction('Переименовал роль', `«${old}» → «${nv}»`)).catch(showAdminError);
+        };
       });
       rolesListEl.querySelectorAll('.role-color-input').forEach((inp) => {
-        inp.onchange = () => rolesRef.child(inp.dataset.roleId).update({ color: inp.value }).catch(showAdminError);
+        inp.onchange = () => {
+          const id = inp.dataset.roleId;
+          rolesRef.child(id).update({ color: inp.value }).then(() => logAction('Изменил цвет роли', `«${roleNameOf(id)}» → ${inp.value}`)).catch(showAdminError);
+        };
       });
       rolesListEl.querySelectorAll('.role-icon-input').forEach((inp) => {
-        inp.onchange = () => rolesRef.child(inp.dataset.roleId).update({ icon: inp.value.trim() || null }).catch(showAdminError);
+        inp.onchange = () => {
+          const id = inp.dataset.roleId;
+          rolesRef.child(id).update({ icon: inp.value.trim() || null }).then(() => logAction('Изменил иконку роли', `«${roleNameOf(id)}» → ${inp.value.trim() || 'нет'}`)).catch(showAdminError);
+        };
       });
       rolesListEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
-        cb.onchange = () => rolesRef.child(cb.dataset.roleId).update({ [cb.dataset.perm]: cb.checked }).catch(showAdminError);
+        cb.onchange = () => {
+          const id = cb.dataset.roleId;
+          rolesRef.child(id).update({ [cb.dataset.perm]: cb.checked })
+            .then(() => logAction('Изменил право роли', `«${roleNameOf(id)}»: ${PERM_LABELS[cb.dataset.perm] || cb.dataset.perm} → ${cb.checked ? 'вкл' : 'выкл'}`))
+            .catch(showAdminError);
+        };
       });
       rolesListEl.querySelectorAll('.role-limit-input').forEach((inp) => {
         inp.onchange = () => {
+          const id = inp.dataset.roleId;
           const raw = inp.value.trim();
           const val = raw === '' ? null : Math.max(0, Math.min(20, Number(raw) || 0));
-          rolesRef.child(inp.dataset.roleId).update({ [inp.dataset.limit]: val }).catch(showAdminError);
+          rolesRef.child(id).update({ [inp.dataset.limit]: val })
+            .then(() => logAction('Изменил лимит роли', `«${roleNameOf(id)}»: ${inp.dataset.limit === 'attacksPerDay' ? 'атак' : 'защит'} в день = ${val == null ? '∞' : val}`))
+            .catch(showAdminError);
         };
       });
       rolesListEl.querySelectorAll('.role-delete-btn').forEach((btn) => {
-        btn.onclick = () => rolesRef.child(btn.dataset.roleId).remove().catch(showAdminError);
+        btn.onclick = () => {
+          const id = btn.dataset.roleId;
+          const special = isSpecialRole(id);
+          const name = roleNameOf(id);
+          // Особые роли (LEADER/DEP) удалять может только супер админ.
+          if (special && !(window.currentPerms && window.currentPerms.owner)) { showAdminError('особую роль может удалить только супер админ'); return; }
+          if (special && !confirm(`Удалить особую роль «${name}»? Она не будет пересоздана автоматически (её можно вернуть кнопкой «Восстановить»).`)) return;
+          const p = special
+            ? specialRolesDeletedRef.child(id).set(true).then(() => rolesRef.child(id).remove())
+            : rolesRef.child(id).remove();
+          p.then(() => logAction(special ? 'Удалил особую роль' : 'Удалил роль', `«${name}»`)).catch(showAdminError);
+        };
       });
 
       const select = document.getElementById('assignRoleSelect');
-      select.innerHTML = roleIds.length
-        ? roleIds.map((id) => `<option value="${id}">${rolesData[id].icon ? escapeHtml(rolesData[id].icon) + ' ' : ''}${escapeHtml(rolesData[id].name || id)}</option>`).join('')
-        : '<option value="">Сначала создайте роль</option>';
+      const prevSel = select.value;
+      select.innerHTML = roleOptionsHtml(prevSel, false);
 
+      // ---- Пользователи с ролями: ID копируется по клику, роль меняется в один клик ----
       const listEl = document.getElementById('assignedUsersList');
       const userIds = Object.keys(userRolesData);
       listEl.innerHTML = '';
@@ -1119,33 +1305,60 @@
       }
       userIds.forEach((uid) => {
         const ur = userRolesData[uid] || {};
-        const role = rolesData[ur.roleId];
         const row = document.createElement('div');
         row.className = 'assigned-user-row';
-        // Аватар и имя берутся из Discord и кэшируются в userRoles/{id} в
-        // момент, когда этот человек сам впервые заходит на сайт через
-        // Discord OAuth (получить их по одному только ID без бота с токеном
-        // на бэкенде — технически невозможно). Пока пользователь ни разу не
-        // заходил, показываем заглушку "Ожидает входа"; как только он
-        // авторизуется, эта строка обновится автоматически (live, без
-        // перезагрузки страницы).
+        // Аватар и имя кэшируются в userRoles/{id}, когда человек сам заходит на
+        // сайт через Discord (по одному ID их получить нельзя). Пока не заходил —
+        // показываем "Ожидает входа".
         const hasProfile = !!ur.username;
         const avatarUrl = ur.avatar
           ? `https://cdn.discordapp.com/avatars/${uid}/${ur.avatar}.png?size=32`
           : 'https://cdn.discordapp.com/embed/avatars/0.png';
         row.innerHTML = `
           <img src="${avatarUrl}" alt="" style="${hasProfile ? '' : 'opacity:.5;'}">
-          <span class="u-name" style="${hasProfile ? '' : 'color:#888;font-style:italic;'}">${hasProfile ? escapeHtml(ur.username) : 'Ожидает входа · ' + escapeHtml(uid)}</span>
-          <span class="u-role">${role ? ((role.icon ? escapeHtml(role.icon) + ' ' : '') + escapeHtml(role.name)) : '—'}</span>
-          <button type="button" data-uid="${uid}" title="Забрать роль">✕</button>
+          <div class="u-main">
+            <span class="u-name" style="${hasProfile ? '' : 'color:#888;font-style:italic;'}">${hasProfile ? escapeHtml(ur.username) : 'Ожидает входа'}</span>
+            <code class="u-id" data-copy-id="${escapeHtml(uid)}" title="Нажмите, чтобы скопировать Discord ID">${escapeHtml(uid)}</code>
+          </div>
+          <select class="u-role-select" data-uid="${escapeHtml(uid)}" title="Быстрая смена роли">${roleOptionsHtml(ur.roleId, !rolesData[ur.roleId])}</select>
+          <button type="button" data-remove-uid="${escapeHtml(uid)}" title="Забрать роль">✕</button>
         `;
         listEl.appendChild(row);
       });
-      listEl.querySelectorAll('button[data-uid]').forEach((btn) => {
-        btn.onclick = () => userRolesRef.child(btn.dataset.uid).remove().catch(showAdminError);
+      listEl.querySelectorAll('[data-copy-id]').forEach((el) => {
+        el.onclick = () => {
+          const id = el.dataset.copyId;
+          copyText(id).then(() => {
+            el.classList.add('copied'); el.textContent = '✓ скопировано';
+            setTimeout(() => { el.classList.remove('copied'); el.textContent = id; }, 1200);
+          });
+        };
+      });
+      listEl.querySelectorAll('.u-role-select').forEach((sel) => {
+        sel.onchange = () => {
+          const uid = sel.dataset.uid;
+          const oldId = (userRolesData[uid] || {}).roleId;
+          const newId = sel.value;
+          if (!newId || newId === oldId) return;
+          userRolesRef.child(uid).update({ roleId: newId })
+            .then(() => logAction('Сменил роль пользователю', `${userNameOf(uid)} (${uid}): ${roleNameOf(oldId)} → ${roleNameOf(newId)}`))
+            .catch(showAdminError);
+        };
+      });
+      listEl.querySelectorAll('button[data-remove-uid]').forEach((btn) => {
+        btn.onclick = () => {
+          const uid = btn.dataset.removeUid;
+          const oldId = (userRolesData[uid] || {}).roleId;
+          const uname = userNameOf(uid);
+          userRolesRef.child(uid).remove()
+            .then(() => logAction('Забрал роль', `${uname} (${uid}): было «${roleNameOf(oldId)}»`))
+            .catch(showAdminError);
+        };
       });
 
       renderCombatMgmtList();
+      renderFactionCdList();
+      renderAdminLogs();
     }
 
     // --- Вкладка "Атака и защита" панели администратора: список ролей с
@@ -1182,7 +1395,7 @@
       listEl.querySelectorAll('.combat-mgmt-reset-btn').forEach((btn) => {
         btn.onclick = () => {
           roleUsageRef.child(btn.dataset.roleId).child(todayKey()).set({ attacks: 0, defenses: 0 })
-            .then(() => { if (typeof updateCombatBadges === 'function') updateCombatBadges(); })
+            .then(() => { if (typeof updateCombatBadges === 'function') updateCombatBadges(); logAction('Сбросил суточный расход атаки/защиты роли', `«${roleNameOf(btn.dataset.roleId)}»`); })
             .catch(showAdminError);
         };
       });
@@ -1219,24 +1432,119 @@
     document.getElementById('notifySaveBtn').onclick = () => {
       const url = document.getElementById('notifyWebhookInput').value.trim();
       if (url && !/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(url)) { showAdminError('это не похоже на Discord webhook URL'); return; }
-      notifySettingsRef.set({ webhookUrl: url || null, enabled: document.getElementById('notifyEnabledInput').checked }).catch(showAdminError);
+      const en = document.getElementById('notifyEnabledInput').checked;
+      notifySettingsRef.set({ webhookUrl: url || null, enabled: en })
+        .then(() => logAction('Сохранил настройки Discord-уведомлений', en && url ? 'включены' : 'выключены'))
+        .catch(showAdminError);
     };
     document.getElementById('notifyTestBtn').onclick = () => {
       if (!notifySettings.webhookUrl) { showAdminError('сначала сохраните webhook URL'); return; }
-      sendDiscordPayload('✅ Тест: уведомления об атаках подключены.').catch(showAdminError);
+      sendDiscordPayload('✅ Тест: уведомления об атаках подключены.').then(() => logAction('Отправил тестовое Discord-уведомление')).catch(showAdminError);
     };
 
-    // Кнопка "Сбросить КД атаки всех квадратов" — снимает часовой КД со
-    // всех квадратов сразу (очищает lastAttackedAt), не трогая суточные
-    // лимиты ролей выше.
-    document.getElementById('resetAllSquaresCooldownBtn').onclick = () => {
-      const ids = Object.keys(squareData);
-      if (!ids.length) return;
-      const updates = {};
-      ids.forEach((id) => { updates[`${id}/lastAttackedAt`] = null; updates[`${id}/attackAt`] = null; });
-      squaresRef.update(updates).catch(showAdminError);
+    // ---- КД фракций ----
+    // После атаки: у нападавшей фракции включается КД АТАКИ (следующая атака —
+    // только после сброса таймера), у защищавшейся — КД ЗАЩИТЫ (на её квадраты
+    // можно напасть только через час). Хранится в factionCooldowns/{ФРАКЦИЯ}.
+    function fcRemaining(f, kind) {
+      const until = (factionCooldowns[f] || {})[kind + 'Until'];
+      const rem = until ? until - serverNow() : 0;
+      return rem > 0 ? rem : 0;
+    }
+    function renderFactionCdList() {
+      const el = document.getElementById('factionCdList');
+      if (!el) return;
+      el.innerHTML = FACTIONS.map((f) => `
+        <div class="combat-mgmt-row">
+          <span class="combat-mgmt-icon">${FACTION_ICONS[f] || ''}</span>
+          <span class="combat-mgmt-name">${escapeHtml(FACTION_NAMES[f] || f)}</span>
+          <span class="combat-mgmt-usage">⚔ <b data-fc-time="${f}:attack">—</b> · 🛡 <b data-fc-time="${f}:defense">—</b></span>
+          <button type="button" class="combat-mgmt-reset-btn" data-fc-reset="${f}:attack" title="Сбросить КД атаки этой фракции">⚔ Сброс</button>
+          <button type="button" class="combat-mgmt-reset-btn" data-fc-reset="${f}:defense" title="Сбросить КД защиты этой фракции">🛡 Сброс</button>
+        </div>`).join('');
+      el.querySelectorAll('[data-fc-reset]').forEach((btn) => {
+        btn.onclick = () => { const [f, kind] = btn.dataset.fcReset.split(':'); resetFactionCd(f, kind); };
+      });
+      tickFactionCdList();
+    }
+    function tickFactionCdList() {
+      document.querySelectorAll('[data-fc-time]').forEach((span) => {
+        const [f, kind] = span.dataset.fcTime.split(':');
+        const rem = fcRemaining(f, kind);
+        span.textContent = rem ? formatMMSS(rem) : '—';
+      });
+    }
+    setInterval(() => { if (adminPanelOpen) tickFactionCdList(); }, 1000);
+
+    // Снимает у квадратов фракции "собственный" часовой КД после атаки
+    // (attackAt/lastAttackedAt) — только уже начавшиеся, не назначенные атаки.
+    function clearSquareCooldowns(ids) {
+      const upd = {};
+      ids.forEach((id) => {
+        const st = squareAttackState(squareData[id]);
+        if (st && st.state === 'cooldown') { upd[`${id}/attackAt`] = null; upd[`${id}/lastAttackedAt`] = null; }
+      });
+      return Object.keys(upd).length ? squaresRef.update(upd) : Promise.resolve();
+    }
+    function resetFactionCd(f, kind) {
+      const tasks = [factionCooldownsRef.child(f).update({ [kind + 'Until']: null })];
+      if (kind === 'defense') tasks.push(clearSquareCooldowns(factionSquares(f)));
+      return Promise.all(tasks)
+        .then(() => logAction(kind === 'attack' ? 'Сбросил КД атаки фракции' : 'Сбросил КД защиты фракции', f))
+        .catch(showAdminError);
+    }
+    document.getElementById('resetAllAttackCdBtn').onclick = () => {
+      const upd = {};
+      FACTIONS.forEach((f) => { upd[`${f}/attackUntil`] = null; });
+      factionCooldownsRef.update(upd).then(() => logAction('Сбросил КД атаки всех фракций')).catch(showAdminError);
+    };
+    document.getElementById('resetAllDefenseCdBtn').onclick = () => {
+      const upd = {};
+      FACTIONS.forEach((f) => { upd[`${f}/defenseUntil`] = null; });
+      Promise.all([factionCooldownsRef.update(upd), clearSquareCooldowns(Object.keys(squareData))])
+        .then(() => logAction('Сбросил КД защиты всех фракций / квадратов'))
+        .catch(showAdminError);
     };
 
+    // ---- Журнал действий ----
+    let adminLogsSubscribed = false;
+    function subscribeAdminLogs() {
+      if (adminLogsSubscribed) return;
+      adminLogsSubscribed = true;
+      adminLogsRef.limitToLast(300).on('value', (snap) => {
+        adminLogsData = snap.val() || {};
+        if (adminPanelOpen) renderAdminLogs();
+      }, (err) => { adminLogsSubscribed = false; showAdminError(err); });
+    }
+    function renderAdminLogs() {
+      const listEl = document.getElementById('adminLogsList');
+      if (!listEl) return;
+      const clearBtn = document.getElementById('adminLogsClearBtn');
+      if (clearBtn) clearBtn.style.display = (window.currentPerms && window.currentPerms.owner) ? 'inline-block' : 'none';
+      const q = (document.getElementById('adminLogsFilter').value || '').trim().toLowerCase();
+      const all = Object.keys(adminLogsData).map((k) => adminLogsData[k]).filter(Boolean).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      const items = all.filter((it) => !q || [it.userName, it.role, it.action, it.details, it.userId].join(' ').toLowerCase().includes(q));
+      document.getElementById('adminLogsCount').textContent = all.length ? `Показано ${items.length} из ${all.length} (хранятся последние 300)` : '';
+      if (!all.length) { listEl.innerHTML = '<div class="admin-empty-hint">Журнал пуст.</div>'; return; }
+      if (!items.length) { listEl.innerHTML = '<div class="admin-empty-hint">Ничего не найдено.</div>'; return; }
+      listEl.innerHTML = items.map((it) => `
+        <div class="log-row">
+          <div class="log-head">
+            <span>${escapeHtml(formatTimestamp(it.ts))}</span>
+            <span class="log-user">${escapeHtml(it.userName || '—')}</span>
+            ${it.role ? `<span class="log-role">${escapeHtml(it.role)}</span>` : ''}
+          </div>
+          <div class="log-action">${escapeHtml(it.action || '')}</div>
+          ${it.details ? `<div class="log-details">${escapeHtml(it.details)}</div>` : ''}
+        </div>`).join('');
+    }
+    document.getElementById('adminLogsFilter').oninput = renderAdminLogs;
+    // Очищать журнал может только супер админ — иначе админы стирали бы свои следы.
+    document.getElementById('adminLogsClearBtn').onclick = () => {
+      if (!(window.currentPerms && window.currentPerms.owner)) return;
+      if (!confirm('Очистить весь журнал действий? Это действие необратимо.')) return;
+      adminLogsRef.remove().then(() => logAction('Очистил журнал действий')).catch(showAdminError);
+    };
 
     // "⚖ Выровнять лимиты ДЕП с ЛИДЕРАМИ" — для каждой фракции копирует
     // attacksPerDay/defensesPerDay роли LEADER на роль(и) DEP той же
@@ -1258,7 +1566,7 @@
         if (r.defensesPerDay !== leader.defensesPerDay) { updates[`${rid}/defensesPerDay`] = (leader.defensesPerDay != null ? leader.defensesPerDay : null); changed++; }
       });
       if (!changed) { showAdminError('лимиты уже совпадают — менять нечего'); return; }
-      rolesRef.update(updates).catch(showAdminError);
+      rolesRef.update(updates).then(() => logAction('Выровнял лимиты ДЕП с ЛИДЕРАМИ', `изменено полей: ${changed}`)).catch(showAdminError);
     };
 
     document.getElementById('addRoleBtn').onclick = () => {
@@ -1273,7 +1581,7 @@
         icon: iconInputEl.value.trim() || null,
         manageSquares: false, deleteSquares: false, manageRoles: false, attackSquares: false
       })
-        .then(() => { input.value = ''; colorInputEl.value = '#5865F2'; iconInputEl.value = ''; })
+        .then(() => { logAction('Создал роль', `«${name}»`); input.value = ''; colorInputEl.value = '#5865F2'; iconInputEl.value = ''; })
         .catch(showAdminError);
     };
 
@@ -1289,7 +1597,7 @@
         username: existing.username || null,
         avatar: existing.avatar || null
       })
-        .then(() => { idInput.value = ''; })
+        .then(() => { logAction('Выдал роль', `ID ${id}: «${roleNameOf(roleId)}»`); idInput.value = ''; })
         .catch(showAdminError);
     };
     // ==========================================================================
@@ -1861,6 +2169,31 @@
       const ss = String(totalSec % 60).padStart(2, '0');
       return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
     }
+    // Что показывать на квадрате сверху:
+    //  pending — атака на этот квадрат назначена, идёт отсчёт до начала (🔥);
+    //  defense — квадрат/его фракцию атаковали: напасть на неё можно только
+    //            после таймера (🛡);
+    //  attack  — фракция этого квадрата сама нападала: следующая атака —
+    //            только после таймера (⚔).
+    // Если активны и защита, и атака — показывается та, что закончится позже.
+    function squareTimerInfo(data) {
+      data = data || {};
+      const st = squareAttackState(data);
+      if (st && st.state === 'pending') return { kind: 'pending', remaining: st.remaining };
+      const now = serverNow();
+      let best = null;
+      const consider = (kind, until) => {
+        const rem = until ? until - now : 0;
+        if (rem > 0 && (!best || rem > best.remaining)) best = { kind, remaining: rem };
+      };
+      if (st && st.state === 'cooldown') consider('defense', st.start + ATTACK_COOLDOWN_MS);
+      if (data.faction) {
+        const fc = factionCooldowns[data.faction] || {};
+        consider('defense', fc.defenseUntil);
+        consider('attack', fc.attackUntil);
+      }
+      return best;
+    }
     function updateCooldownTimers() {
       Object.keys(squareMarkers).forEach((id) => {
         const marker = squareMarkers[id];
@@ -1869,11 +2202,15 @@
         if (!el) return;
         const cdEl = el.querySelector('.square-cooldown');
         if (!cdEl) return;
-        const st = squareAttackState(data);
-        if (st) {
-          cdEl.querySelector('.square-cooldown-text').textContent = formatMMSS(st.remaining);
-          cdEl.classList.toggle('pending', st.state === 'pending');
-          cdEl.classList.toggle('cooling', st.state === 'cooldown');
+        const info = squareTimerInfo(data);
+        if (info) {
+          cdEl.querySelector('.square-cooldown-text').textContent = formatMMSS(info.remaining);
+          const fireEl = cdEl.querySelector('.square-fire');
+          const icon = info.kind === 'pending' ? '🔥' : (info.kind === 'defense' ? '🛡' : '⚔');
+          if (fireEl && fireEl.textContent !== icon) fireEl.textContent = icon;
+          cdEl.classList.toggle('pending', info.kind === 'pending');
+          cdEl.classList.toggle('defense', info.kind === 'defense');
+          cdEl.classList.toggle('attack', info.kind === 'attack');
           cdEl.style.display = 'flex';
         } else {
           cdEl.style.display = 'none';
@@ -1920,19 +2257,16 @@
     function midnightsBetween(fromTs, toTs) { return Math.max(0, mskDayIndex(toTs) - mskDayIndex(fromTs)); }
     function factionSquares(f) { return Object.keys(squareData).filter((id) => squareData[id] && squareData[id].faction === f); }
     function factionRate(f) { return factionSquares(f).reduce((sum, id) => sum + (Number(squareData[id].materialsPerDay) || 0), 0); }
+    // Материалы НЕ начисляются автоматически: значение — это накопленный
+    // amount. Пополнить его можно только вручную (тестовое начисление в
+    // статистике для stadmin/супер админа). settleFaction оставлен для
+    // совместимости и ничего не считает.
     function factionMaterials(f) {
       const st = materialsStats[f];
-      if (!st) return 0;
-      return (st.amount || 0) + factionRate(f) * midnightsBetween(st.updatedAt || serverNow(), serverNow());
+      return st ? (st.amount || 0) : 0;
     }
     function settleFaction(f) {
-      if (!f) return Promise.resolve();
-      const rate = factionRate(f);
-      return statsRef.child(f).transaction((cur) => {
-        const now = serverNow();
-        if (!cur) return { amount: 0, updatedAt: now };
-        return { amount: (cur.amount || 0) + rate * midnightsBetween(cur.updatedAt || now, now), updatedAt: now };
-      }).catch((e) => console.error('settle failed', e));
+      return Promise.resolve();
     }
     function settleFactions(list) {
       return Promise.all([...new Set(list.filter(Boolean))].map(settleFaction));
@@ -2110,9 +2444,15 @@
       closeSquareEditor();
       // Перед изменением фракции/выработки "закрываем" накопленные
       // материалы по старым условиям, чтобы подсчёт оставался точным.
+      const lblSave = payload.label || 'Без названия';
       settleFactions([oldFaction, payload.faction]).then(() => {
-        if (id) squaresRef.child(id).update(payload);
-        else if (ll) squaresRef.push({ lat: ll.lat, lng: ll.lng, ...payload });
+        if (id) {
+          squaresRef.child(id).update(payload);
+          logAction('Изменил квадрат', `«${lblSave}»${oldFaction !== payload.faction ? `: фракция ${oldFaction || 'нет'} → ${payload.faction || 'нет'}` : ''}`);
+        } else if (ll) {
+          squaresRef.push({ lat: ll.lat, lng: ll.lng, ...payload });
+          logAction('Создал квадрат', `«${lblSave}»${payload.faction ? ` (${payload.faction})` : ''}`);
+        }
       });
     };
     deleteBtn.onclick = () => {
@@ -2120,7 +2460,13 @@
       const id = editingSquareId;
       const f = id ? (squareData[id] || {}).faction : null;
       closeSquareEditor();
-      if (id) settleFactions([f]).then(() => squaresRef.child(id).remove());
+      const lblDel = id ? sqName(id) : '';
+      if (id) settleFactions([f]).then(() => squaresRef.child(id).remove()).then(() => logAction('Удалил квадрат', `«${lblDel}»${f ? ` (${f})` : ''}`));
+    };
+    document.getElementById('squareNeutralBtn').onclick = () => {
+      factionInput.value = '';
+      colorInput.value = NEUTRAL_COLOR;
+      updatePreview();
     };
     document.getElementById('squareCancelBtn').onclick = closeSquareEditor;
     document.getElementById('squareCloseBtn').onclick = closeSquareEditor;
@@ -2165,6 +2511,8 @@
     function getAttackBlockReasonFor(id, data) {
       const perms = window.currentPerms || {};
       data = data || {};
+      // Супер админ может нападать в любое время: ни КД, ни лимиты его не блокируют.
+      if (perms.owner) return null;
       const st = squareAttackState(data);
       if (st && st.state === 'pending') {
         return { short: '🔥 Атака назначена', full: `На этот квадрат уже назначена атака — до начала ${formatMMSS(st.remaining)}.` };
@@ -2172,6 +2520,20 @@
       if (st && st.state === 'cooldown') {
         const mins = Math.ceil(st.remaining / 60000);
         return { short: `⏳ Ещё ${mins} мин.`, full: `Этот квадрат недавно атаковали — повторная атака будет доступна через ${mins} мин.` };
+      }
+      // КД атаки своей фракции: после нападения следующая атака — только после сброса таймера.
+      if (perms.faction) {
+        const rem = fcRemaining(perms.faction, 'attack');
+        if (rem > 0) {
+          return { short: `⚔ КД атаки ${Math.ceil(rem / 60000)} мин.`, full: `Ваша фракция недавно нападала — следующая атака будет доступна через ${formatMMSS(rem)}.` };
+        }
+      }
+      // КД защиты фракции-цели: на её квадраты нельзя напасть, пока таймер не сбросится.
+      if (data.faction) {
+        const rem = fcRemaining(data.faction, 'defense');
+        if (rem > 0) {
+          return { short: `🛡 Защита ${Math.ceil(rem / 60000)} мин.`, full: `Фракция ${data.faction} недавно защищалась — напасть на её квадраты можно будет через ${formatMMSS(rem)}.` };
+        }
       }
       if (perms.faction && data.faction && perms.faction === data.faction) {
         return { short: '⚔ Своя фракция', full: 'Нельзя атаковать квадрат своей же фракции.' };
@@ -2241,6 +2603,11 @@
       // 3) Ставим квадрату метку времени атаки — включает часовую задержку
       // на повторную атаку этого же квадрата для всех, и запускает онлайн-таймер.
       tasks.push(squaresRef.child(id).update({ attackAt: extra.attackAt || serverNow(), lastAttackedAt: null }));
+      // 3.1) КД фракций на 1 час от начала атаки: нападавшей — КД атаки,
+      // защищавшейся — КД защиты (на её квадраты нельзя напасть до сброса).
+      const cdUntil = (extra.attackAt || serverNow()) + ATTACK_COOLDOWN_MS;
+      if (perms.faction) tasks.push(factionCooldownsRef.child(perms.faction).update({ attackUntil: cdUntil }));
+      if (squareFaction) tasks.push(factionCooldownsRef.child(squareFaction).update({ defenseUntil: cdUntil }));
       // 4) Записываем саму атаку в историю сражений.
       tasks.push(battleHistoryRef.push({
         title: `Атака на «${squareLabel}»`,
@@ -2258,6 +2625,7 @@
         createdAt: firebase.database.ServerValue.TIMESTAMP
       }));
 
+      tasks.push(logAction('Напал на квадрат', `«${squareLabel}»${squareFaction ? ` (${squareFaction})` : ''}${perms.faction ? `, от ${perms.faction}` : ''}${extra.plannedTime ? `, время ${extra.plannedTime} МСК` : ''}`));
       notifyAttack(data, attackerName, perms.faction, perms.roleName, extra);
       return Promise.all(tasks).then((res) => {
         // Подстраховка: сразу пересчитываем плашку атаки/защиты и таймер КД
@@ -2334,10 +2702,15 @@
         squareInfoErrorEl.classList.add('visible');
         return;
       }
+      const isOwnerAtk = !!(window.currentPerms && window.currentPerms.owner);
       const plannedTime = document.getElementById('attackTimeInput').value;
-      const participants = Number(document.getElementById('attackParticipantsInput').value);
+      const partsRaw = document.getElementById('attackParticipantsInput').value;
+      const participants = Number(partsRaw);
       let formError = null;
-      if (!plannedTime) formError = 'Выберите время нападения.';
+      if (isOwnerAtk) {
+        // Супер админ: любое время (пустое = прямо сейчас), любое число участников.
+        if (partsRaw !== '' && (!Number.isInteger(participants) || participants < 1)) formError = 'Количество участников — целое число больше 0.';
+      } else if (!plannedTime) formError = 'Выберите время нападения.';
       else if (!isAllowedAttackTime(plannedTime)) formError = 'Это время недоступно. Нападение возможно с 12:30 до 23:30 по Москве, кроме 16:00–16:30 и 20:00–20:30.';
       else if (attackTimestampFor(plannedTime) <= serverNow()) formError = 'Это время уже прошло — выберите более позднее время сегодня (по Москве).';
       else if (!Number.isInteger(participants) || participants < 10 || participants > 20) formError = 'Укажите количество участников от 10 до 20.';
@@ -2353,7 +2726,7 @@
       squareInfoErrorEl.classList.remove('visible');
       document.getElementById('squareAttackForm').classList.add('hidden');
 
-      performAttack(infoSquareId, infoSquareData, { plannedTime, participants, attackAt: attackTimestampFor(plannedTime) }).then(() => {
+      performAttack(infoSquareId, infoSquareData, { plannedTime: plannedTime || null, participants: partsRaw !== '' ? participants : null, attackAt: plannedTime ? attackTimestampFor(plannedTime) : serverNow() }).then(() => {
         // Успех подтверждаем видимым результатом: кнопка остаётся в
         // состоянии "отправлено" — запись уже появится в "Истории сражений"
         // (список обновляется сам, т.к. подписан на live-изменения
@@ -2422,18 +2795,25 @@
     function sqEditApply(fields, okText) {
       if (!window.canEditSquareResult || !infoSquareId) return Promise.resolve();
       const oldF = (squareData[infoSquareId] || {}).faction;
+      const lbl = sqName(infoSquareId);
       return settleFactions([oldF, fields.faction])
         .then(() => squaresRef.child(infoSquareId).update(Object.assign({ updatedAt: firebase.database.ServerValue.TIMESTAMP }, fields)))
-        .then(() => sqEditMsg(okText)).catch((e) => sqEditMsg('Ошибка: ' + ((e && e.message) || e), true));
+        .then(() => { sqEditMsg(okText); logAction('Изменил квадрат', `«${lbl}»: ${okText}`); }).catch((e) => sqEditMsg('Ошибка: ' + ((e && e.message) || e), true));
     }
     document.getElementById('sqEditTransferBtn').onclick = () => {
       const f = document.getElementById('sqEditFaction').value;
       const fields = { faction: f || null };
       if (f && FACTION_COLORS[f]) fields.color = FACTION_COLORS[f];
-      sqEditApply(fields, f ? `Квадрат передан фракции ${f}` : 'Фракция снята');
+      else if (!f) { fields.color = NEUTRAL_COLOR; document.getElementById('sqEditColor').value = NEUTRAL_COLOR; }
+      sqEditApply(fields, f ? `Квадрат передан фракции ${f}` : 'Фракция снята — квадрат нейтральный (серый)');
     };
     document.getElementById('sqEditRecolorBtn').onclick = () => {
       sqEditApply({ color: document.getElementById('sqEditColor').value }, 'Квадрат перекрашен');
+    };
+    document.getElementById('sqEditNeutralBtn').onclick = () => {
+      document.getElementById('sqEditFaction').value = '';
+      document.getElementById('sqEditColor').value = NEUTRAL_COLOR;
+      sqEditApply({ faction: null, color: NEUTRAL_COLOR }, 'Квадрат стал нейтральным (серый)');
     };
     document.getElementById('sqEditWinnerBtn').onclick = () => {
       if (!window.canEditSquareResult || !infoSquareId) return;
@@ -2456,7 +2836,7 @@
           tasks.push(settleP.then(() => squaresRef.child(infoSquareId).update(fields)));
         }
       }
-      settleP.then(() => Promise.all(tasks)).then(() => sqEditMsg(`Победила фракция ${winner} («${sqLabel}»)`))
+      settleP.then(() => Promise.all(tasks)).then(() => { sqEditMsg(`Победила фракция ${winner} («${sqLabel}»)`); logAction('Определил победителя', `«${sqLabel}»: ${winner}${document.getElementById('sqEditWinnerTransfer').checked ? ' (квадрат передан)' : ''}`); })
         .catch((e) => sqEditMsg('Ошибка: ' + ((e && e.message) || e), true));
     };
 
@@ -2584,7 +2964,7 @@
     battleHistoryClearBtnEl.onclick = () => {
       if (!window.canManageRoles) return;
       if (!confirm('Очистить всю историю сражений? Это действие необратимо.')) return;
-      battleHistoryRef.remove().catch((err) => {
+      battleHistoryRef.remove().then(() => logAction('Очистил историю сражений')).catch((err) => {
         console.error(err);
         alert('Не удалось очистить историю: ' + ((err && err.message) || err));
       });
@@ -2633,6 +3013,7 @@
       const perms = window.currentPerms || {};
       const isAdminView = !!window.canEditSquareResult;
       statsResetBtnEl.style.display = perms.owner ? 'inline-block' : 'none';
+      document.getElementById('statsTestAccrualBtn').style.display = window.canTestAccrual ? 'inline-block' : 'none';
       document.getElementById('statsTypeRow').style.display = isAdminView ? 'flex' : 'none';
       if (!statsModalEl.classList.contains('visible')) return;
       let list = FACTIONS.slice();
@@ -2676,7 +3057,22 @@
       const now = serverNow();
       const obj = {};
       FACTIONS.forEach((f) => { obj[f] = { amount: 0, updatedAt: now }; });
-      statsRef.set(obj).catch((e) => alert('Не удалось сбросить: ' + ((e && e.message) || e)));
+      statsRef.set(obj).then(() => logAction('Сбросил материалы всех фракций')).catch((e) => alert('Не удалось сбросить: ' + ((e && e.message) || e)));
+    };
+    // 🧪 Тестовое начисление (stadmin / супер админ): один раз добавляет каждой
+    // фракции сумму выработки «📦 в день» её квадратов.
+    document.getElementById('statsTestAccrualBtn').onclick = () => {
+      if (!window.canTestAccrual) return;
+      if (!confirm('Выполнить тестовое начисление? Каждая фракция получит сумму «📦 в день» своих квадратов (один раз).')) return;
+      const now = serverNow();
+      const summary = [];
+      Promise.all(FACTIONS.map((f) => {
+        const rate = factionRate(f);
+        if (!rate) return null;
+        summary.push(`${f} +${rate}`);
+        return statsRef.child(f).transaction((cur) => ({ amount: ((cur && cur.amount) || 0) + rate, updatedAt: now }));
+      })).then(() => logAction('Тестовое начисление материалов', summary.join(', ') || 'нет выработки'))
+        .catch((e) => alert('Не удалось начислить: ' + ((e && e.message) || e)));
     };
     // ====================================================================
   </script>
