@@ -328,6 +328,20 @@
     .info-modal-faction {
       font-size: 11px; color: #9a9a9a; padding: 12px 14px 0; margin-top: 0;
     }
+    .square-attack-form { padding: 0 14px 10px; display: flex; flex-direction: column; gap: 8px; }
+    .square-attack-form.hidden { display: none; }
+    .square-attack-form-row { display: flex; align-items: center; gap: 8px; }
+    .square-attack-form-row label { width: 120px; font-size: 12px; color: #aaa; flex-shrink: 0; }
+    .square-attack-form-row input { flex: 1; min-width: 0; background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 8px; color: #eee; padding: 7px 9px; font-size: 13px; color-scheme: dark; }
+    .square-attack-form-hint { font-size: 11px; color: #777; line-height: 1.4; }
+    #battleHistoryBtn { position: relative; overflow: visible !important; }
+    .history-badge {
+      position: absolute; top: -7px; right: -7px; min-width: 20px; height: 20px; padding: 0 5px;
+      border-radius: 10px; background: #e03131; color: #fff; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+      box-shadow: 0 2px 6px rgba(0,0,0,.5); pointer-events: none;
+    }
+    .history-badge.hidden { display: none; }
     .square-edit-toggle-btn {
       flex: 1; border: 0; border-radius: 10px; padding: 10px; margin-left: 8px;
       background: #2b2b2d; color: #ddd; cursor: pointer; font-size: 13px; font-weight: 600;
@@ -520,12 +534,18 @@
     /* Онлайн-таймер обратного отсчёта КД атаки — показывается под квадратом,
        пока он находится на КД (обновляется каждую секунду через JS). */
     .square-cooldown {
-      position: absolute; left: 50%; bottom: -20px; transform: translateX(-50%);
+      position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%);
       background: rgba(10,10,12,.9); color: #ffb4b4; font-size: 10px; font-weight: 700;
       padding: 2px 6px; border-radius: 6px; white-space: nowrap;
       z-index: 6; pointer-events: none; display: none;
-      font-variant-numeric: tabular-nums;
+      font-variant-numeric: tabular-nums; align-items: center; justify-content: center;
     }
+    .square-cooldown .square-cooldown-text { position: relative; z-index: 2; text-shadow: 0 1px 3px rgba(0,0,0,.9); }
+    .square-cooldown .square-fire { display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -55%); font-size: 30px; line-height: 1; z-index: 1; opacity: .9; }
+    /* Таймер до начала запланированной атаки: огонь за цифрами */
+    .square-cooldown.pending { background: rgba(10,10,12,.35); color: #fff; font-size: 12px; padding: 5px 12px; min-width: 46px; bottom: -30px; }
+    .square-cooldown.pending .square-fire { display: block; animation: fireFlicker .9s ease-in-out infinite alternate; }
+    @keyframes fireFlicker { from { transform: translate(-50%, -55%) scale(.92); } to { transform: translate(-50%, -58%) scale(1.08); } }
   </style>
 </head>
 <body>
@@ -610,6 +630,17 @@
     <div class="info-modal-body">
       <p class="info-modal-desc" id="squareInfoDescription"></p>
     </div>
+    <div class="square-attack-form hidden" id="squareAttackForm">
+      <div class="square-attack-form-row">
+        <label for="attackTimeInput">🕐 Время (МСК)</label>
+        <input type="time" id="attackTimeInput" step="60">
+      </div>
+      <div class="square-attack-form-row">
+        <label for="attackParticipantsInput">👥 Участников</label>
+        <input type="number" id="attackParticipantsInput" min="10" max="20" step="1" placeholder="10–20">
+      </div>
+      <div class="square-attack-form-hint">Нападение возможно с 12:00 до 16:00 и с 20:00 до 24:00 по Москве. Участников — от 10 до 20.</div>
+    </div>
     <div class="info-modal-actions" id="squareInfoActions">
       <button type="button" class="square-attack-btn hidden" id="squareAttackBtn">⚔ Напасть</button>
       <button type="button" class="square-edit-toggle-btn hidden" id="squareEditToggleBtn">✏ Редактировать</button>
@@ -649,7 +680,7 @@
         <input type="text" id="statsTypeInput" value="type" maxlength="30">
       </div>
       <div id="statsList" class="stats-list"></div>
-      <div class="stats-hint">Материалы копятся автоматически: сумма выработки «📦 в день» всех квадратов фракции.</div>
+      <div class="stats-hint">Материалы начисляются автоматически каждый день в 00:00 по МСК: сумма выработки «📦 в день» всех квадратов фракции.</div>
       <button type="button" class="battle-history-clear-btn" id="statsResetBtn" style="display:none;margin-top:10px;">🔄 Сбросить материалы (временно)</button>
     </div>
   </div>
@@ -900,6 +931,7 @@
       safe(() => updateCooldownTimers());
       safe(() => renderBattleHistory());
       safe(() => renderStats());
+      safe(() => updateHistoryBadge());
       safe(() => updateSquareEditVisibility());
       safe(() => { if (adminPanelOpen) renderAdminPanelContent(); });
       return perms;
@@ -1128,7 +1160,8 @@
         body: JSON.stringify({ content, allowed_mentions: { parse: ['users'] } })
       });
     }
-    function notifyAttack(squareData_, attackerName, attackerFaction, attackerRoleName) {
+    function notifyAttack(squareData_, attackerName, attackerFaction, attackerRoleName, extra) {
+      extra = extra || {};
       const sqFaction = squareData_ && squareData_.faction;
       const roleIds = Object.keys(rolesData).filter((rid) => {
         const r = rolesData[rid];
@@ -1139,7 +1172,7 @@
         .map((uid) => `<@${uid}>`);
       const label = (squareData_ && squareData_.label) || 'Без названия';
       const by = attackerFaction ? `фракция **${attackerFaction}**` : `**${attackerName}**`;
-      const text = `${mentions.join(' ')} ⚔ На вас напала ${by}! Атакован квадрат «${label}»${attackerFaction ? ` (нападавший: ${attackerName}${attackerRoleName ? ', ' + attackerRoleName : ''})` : ''}.`.trim();
+      const text = `${mentions.join(' ')} ⚔ На вас напала ${by}! Атакован квадрат «${label}»${attackerFaction ? ` (нападавший: ${attackerName}${attackerRoleName ? ', ' + attackerRoleName : ''})` : ''}.${extra.plannedTime ? ` Время: **${extra.plannedTime} МСК**.` : ''}${extra.participants ? ` Участников: **${extra.participants}**.` : ''}`.trim();
       return sendDiscordPayload(text).catch((e) => console.error('Discord notify failed', e));
     }
     document.getElementById('notifySaveBtn').onclick = () => {
@@ -1159,7 +1192,7 @@
       const ids = Object.keys(squareData);
       if (!ids.length) return;
       const updates = {};
-      ids.forEach((id) => { updates[`${id}/lastAttackedAt`] = null; });
+      ids.forEach((id) => { updates[`${id}/lastAttackedAt`] = null; updates[`${id}/attackAt`] = null; });
       squaresRef.update(updates).catch(showAdminError);
     };
 
@@ -1571,7 +1604,7 @@
         <div class="bottom-left-menu"><button id="statsBtn">📊 Статистика</button></div>
         <div class="bottom-left-menu">
           <button id="addSquareBtn" class="hidden-btn">➕ Квадрат</button>
-          <button id="battleHistoryBtn">📜 История сражений</button>
+          <button id="battleHistoryBtn">📜 История сражений<span class="history-badge hidden" id="historyBadge">0</span></button>
         </div>
       `;
       L.DomEvent.disableClickPropagation(div);
@@ -1631,7 +1664,7 @@
       // Плейсхолдер для онлайн-таймера обратного отсчёта КД атаки — сам
       // текст и видимость обновляются отдельно, каждую секунду, функцией
       // updateCooldownTimers(), без пересоздания иконки (см. ниже).
-      const cooldownHtml = `<span class="square-cooldown"></span>`;
+      const cooldownHtml = `<span class="square-cooldown"><span class="square-fire">🔥</span><span class="square-cooldown-text"></span></span>`;
       return L.divIcon({
         className: '',
         html: `<div class="map-square" style="width:${size}px;height:${size}px;background:${hexToRgba(color, opacity)};border:${borderWidth}px solid ${borderColor};">${labelHtml}${factionIconHtml}${cooldownHtml}</div>`,
@@ -1718,35 +1751,56 @@
     // "58:12") и состояние отдельной кнопки "Напасть" на квадрате —
     // обновляются раз в секунду, без пересоздания иконки (иначе перетаскивание
     // и hover-состояние квадрата будут дёргаться).
+    // Состояние атаки на квадрате:
+    //  pending  — атака назначена на attackAt, идёт отсчёт до начала;
+    //  cooldown — атака началась, идёт КД на повторную атаку (1 час от attackAt).
+    // Старые данные (только lastAttackedAt) трактуются как начавшаяся атака.
+    function squareAttackState(data) {
+      data = data || {};
+      const now = serverNow();
+      const start = data.attackAt || data.lastAttackedAt;
+      if (!start) return null;
+      if (start > now) return { state: 'pending', remaining: start - now, start };
+      const remaining = ATTACK_COOLDOWN_MS - (now - start);
+      return remaining > 0 ? { state: 'cooldown', remaining, start } : null;
+    }
+    function formatMMSS(ms) {
+      const totalSec = Math.ceil(ms / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+      const ss = String(totalSec % 60).padStart(2, '0');
+      return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+    }
     function updateCooldownTimers() {
-      const now = Date.now();
       Object.keys(squareMarkers).forEach((id) => {
         const marker = squareMarkers[id];
         const data = squareData[id] || {};
         const el = marker.getElement();
         if (!el) return;
         const cdEl = el.querySelector('.square-cooldown');
-        const remaining = data.lastAttackedAt ? (ATTACK_COOLDOWN_MS - (now - data.lastAttackedAt)) : 0;
-        if (cdEl) {
-          if (remaining > 0) {
-            const totalSec = Math.ceil(remaining / 1000);
-            const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
-            const ss = String(totalSec % 60).padStart(2, '0');
-            cdEl.textContent = `${mm}:${ss}`;
-            cdEl.style.display = 'block';
-          } else {
-            cdEl.style.display = 'none';
-          }
+        if (!cdEl) return;
+        const st = squareAttackState(data);
+        if (st) {
+          cdEl.querySelector('.square-cooldown-text').textContent = formatMMSS(st.remaining);
+          cdEl.classList.toggle('pending', st.state === 'pending');
+          cdEl.style.display = 'flex';
+        } else {
+          cdEl.style.display = 'none';
         }
       });
+      // Если открыто окно квадрата — обновляем кнопку/причину блокировки
+      // (например, когда отсчёт закончился и началось КД).
+      if (typeof infoSquareId !== 'undefined' && infoSquareId && squareInfoEl.classList.contains('visible')) {
+        try { updateAttackButtonVisibility(); } catch (e) {}
+      }
     }
     setInterval(updateCooldownTimers, 1000);
 
 
     // ===== Материалы и статистика фракций =====
     // Каждому квадрату задаётся выработка "материалов в день". Материалы
-    // фракции копятся непрерывно: amount (на момент updatedAt) + выработка
-    // всех её квадратов × прошедшее время. Значение на экране считается
+    // фракции начисляются раз в сутки в 00:00 МСК: amount (на момент
+    // updatedAt) + выработка всех её квадратов × число прошедших полуночей. Значение на экране считается
     // "на лету"; в Firebase фиксируется (settle) только при изменении
     // выработки/владельца квадрата и при сбросе.
     const statsRef = firebase.database().ref('stats/materials');
@@ -1755,12 +1809,18 @@
     const MS_DAY = 24 * 60 * 60 * 1000;
     firebase.database().ref('.info/serverTimeOffset').on('value', (s) => { serverOffset = s.val() || 0; });
     function serverNow() { return Date.now() + serverOffset; }
+    // Материалы начисляются раз в сутки, ровно в 00:00 по Москве (UTC+3, без
+    // перехода на летнее время): считаем, сколько полуночей МСК прошло между
+    // двумя моментами.
+    const MSK_OFFSET_MS = 3 * 60 * 60 * 1000;
+    function mskDayIndex(ts) { return Math.floor((ts + MSK_OFFSET_MS) / MS_DAY); }
+    function midnightsBetween(fromTs, toTs) { return Math.max(0, mskDayIndex(toTs) - mskDayIndex(fromTs)); }
     function factionSquares(f) { return Object.keys(squareData).filter((id) => squareData[id] && squareData[id].faction === f); }
     function factionRate(f) { return factionSquares(f).reduce((sum, id) => sum + (Number(squareData[id].materialsPerDay) || 0), 0); }
     function factionMaterials(f) {
       const st = materialsStats[f];
       if (!st) return 0;
-      return (st.amount || 0) + factionRate(f) * Math.max(0, serverNow() - (st.updatedAt || serverNow())) / MS_DAY;
+      return (st.amount || 0) + factionRate(f) * midnightsBetween(st.updatedAt || serverNow(), serverNow());
     }
     function settleFaction(f) {
       if (!f) return Promise.resolve();
@@ -1768,7 +1828,7 @@
       return statsRef.child(f).transaction((cur) => {
         const now = serverNow();
         if (!cur) return { amount: 0, updatedAt: now };
-        return { amount: (cur.amount || 0) + rate * Math.max(0, now - (cur.updatedAt || now)) / MS_DAY, updatedAt: now };
+        return { amount: (cur.amount || 0) + rate * midnightsBetween(cur.updatedAt || now, now), updatedAt: now };
       }).catch((e) => console.error('settle failed', e));
     }
     function settleFactions(list) {
@@ -1993,12 +2053,13 @@
     function getAttackBlockReasonFor(id, data) {
       const perms = window.currentPerms || {};
       data = data || {};
-      if (data.lastAttackedAt) {
-        const remaining = ATTACK_COOLDOWN_MS - (Date.now() - data.lastAttackedAt);
-        if (remaining > 0) {
-          const mins = Math.ceil(remaining / 60000);
-          return { short: `⏳ Ещё ${mins} мин.`, full: `Этот квадрат недавно атаковали — повторная атака будет доступна через ${mins} мин.` };
-        }
+      const st = squareAttackState(data);
+      if (st && st.state === 'pending') {
+        return { short: '🔥 Атака назначена', full: `На этот квадрат уже назначена атака — до начала ${formatMMSS(st.remaining)}.` };
+      }
+      if (st && st.state === 'cooldown') {
+        const mins = Math.ceil(st.remaining / 60000);
+        return { short: `⏳ Ещё ${mins} мин.`, full: `Этот квадрат недавно атаковали — повторная атака будет доступна через ${mins} мин.` };
       }
       if (perms.faction && data.faction && perms.faction === data.faction) {
         return { short: '⚔ Своя фракция', full: 'Нельзя атаковать квадрат своей же фракции.' };
@@ -2014,12 +2075,30 @@
 
     // Проверка для квадрата, открытого в инфо-панели (модальная кнопка).
     function getAttackBlockReason() {
-      return getAttackBlockReasonFor(infoSquareId, infoSquareData);
+      return getAttackBlockReasonFor(infoSquareId, squareData[infoSquareId] || infoSquareData);
     }
 
     // Собственно отправка атаки — общая для модальной кнопки "Напасть" и
     // для отдельной кнопки атаки прямо на квадрате. Возвращает Promise.
-    function performAttack(id, data) {
+    // Допустимое время нападения (МСК): 12:00–16:00 и 20:00–24:00.
+    // Запрещено 00:00–12:00 и 16:00–20:00.
+    function isAllowedAttackTime(hhmm) {
+      const m = /^(\d{2}):(\d{2})$/.exec(hhmm || '');
+      if (!m) return false;
+      const mins = Number(m[1]) * 60 + Number(m[2]);
+      return (mins >= 12 * 60 && mins < 16 * 60) || (mins >= 20 * 60 && mins < 24 * 60);
+    }
+
+    // Момент начала атаки: ближайшее сегодняшнее HH:MM по Москве (UTC+3).
+    function attackTimestampFor(hhmm) {
+      const [h, m] = hhmm.split(':').map(Number);
+      const mskNow = serverNow() + 3 * 60 * 60 * 1000;
+      const dayStartMsk = Math.floor(mskNow / 86400000) * 86400000;
+      return dayStartMsk + (h * 60 + m) * 60000 - 3 * 60 * 60 * 1000;
+    }
+
+    function performAttack(id, data, extra) {
+      extra = extra || {};
       const perms = window.currentPerms || {};
       const attackerName = currentUser.global_name || currentUser.username;
       const squareLabel = (data && data.label) || 'Без названия';
@@ -2042,7 +2121,7 @@
       }
       // 3) Ставим квадрату метку времени атаки — включает часовую задержку
       // на повторную атаку этого же квадрата для всех, и запускает онлайн-таймер.
-      tasks.push(squaresRef.child(id).update({ lastAttackedAt: firebase.database.ServerValue.TIMESTAMP }));
+      tasks.push(squaresRef.child(id).update({ attackAt: extra.attackAt || serverNow(), lastAttackedAt: null }));
       // 4) Записываем саму атаку в историю сражений.
       tasks.push(battleHistoryRef.push({
         title: `Атака на «${squareLabel}»`,
@@ -2054,10 +2133,13 @@
         squareId: id,
         squareLabel,
         squareFaction: squareFaction || null,
+        plannedTime: extra.plannedTime || null,
+        attackAt: extra.attackAt || null,
+        participants: extra.participants || null,
         createdAt: firebase.database.ServerValue.TIMESTAMP
       }));
 
-      notifyAttack(data, attackerName, perms.faction, perms.roleName);
+      notifyAttack(data, attackerName, perms.faction, perms.roleName, extra);
       return Promise.all(tasks).then((res) => {
         // Подстраховка: сразу пересчитываем плашку атаки/защиты и таймер КД
         // на квадрате, не дожидаясь live-события от Firebase (обычно оно и
@@ -2076,9 +2158,11 @@
     function updateAttackButtonVisibility() {
       const canAttackAtAll = !!window.canAttackSquares && !!currentUser && !!infoSquareId;
       squareAttackBtnEl.classList.toggle('hidden', !canAttackAtAll);
-      if (!canAttackAtAll) return;
-      if (squareAttackBtnEl.classList.contains('sent')) return; // не перетираем "Атака отправлена"
+      const attackFormEl = document.getElementById('squareAttackForm');
+      if (!canAttackAtAll) { attackFormEl.classList.add('hidden'); return; }
+      if (squareAttackBtnEl.classList.contains('sent')) { attackFormEl.classList.add('hidden'); return; } // не перетираем "Атака отправлена"
       const block = getAttackBlockReason();
+      attackFormEl.classList.toggle('hidden', !!block);
       if (block) {
         squareAttackBtnEl.disabled = true;
         squareAttackBtnEl.classList.add('blocked');
@@ -2115,6 +2199,8 @@
       squareInfoErrorEl.textContent = '';
       squareAttackBtnEl.classList.remove('sent', 'blocked');
       squareEditPanelEl.style.display = 'none';
+      document.getElementById('attackTimeInput').value = '';
+      document.getElementById('attackParticipantsInput').value = '';
       updateAttackButtonVisibility();
       updateSquareEditVisibility();
       squareInfoEl.classList.add('visible');
@@ -2129,13 +2215,26 @@
         squareInfoErrorEl.classList.add('visible');
         return;
       }
+      const plannedTime = document.getElementById('attackTimeInput').value;
+      const participants = Number(document.getElementById('attackParticipantsInput').value);
+      let formError = null;
+      if (!plannedTime) formError = 'Выберите время нападения.';
+      else if (!isAllowedAttackTime(plannedTime)) formError = 'Это время недоступно. Нападение возможно с 12:00 до 16:00 и с 20:00 до 24:00 по Москве.';
+      else if (attackTimestampFor(plannedTime) <= serverNow()) formError = 'Это время уже прошло — выберите более позднее время сегодня (по Москве).';
+      else if (!Number.isInteger(participants) || participants < 10 || participants > 20) formError = 'Укажите количество участников от 10 до 20.';
+      if (formError) {
+        squareInfoErrorEl.textContent = formError;
+        squareInfoErrorEl.classList.add('visible');
+        return;
+      }
       squareAttackBtnEl.disabled = true;
       squareAttackBtnEl.classList.add('sent');
       squareAttackBtnEl.classList.remove('blocked');
       squareAttackBtnEl.textContent = '⚔ Атака отправлена';
       squareInfoErrorEl.classList.remove('visible');
+      document.getElementById('squareAttackForm').classList.add('hidden');
 
-      performAttack(infoSquareId, infoSquareData).then(() => {
+      performAttack(infoSquareId, infoSquareData, { plannedTime, participants, attackAt: attackTimestampFor(plannedTime) }).then(() => {
         // Успех подтверждаем видимым результатом: кнопка остаётся в
         // состоянии "отправлено" — запись уже появится в "Истории сражений"
         // (список обновляется сам, т.к. подписан на live-изменения
@@ -2146,6 +2245,7 @@
         squareAttackBtnEl.disabled = false;
         squareAttackBtnEl.classList.remove('sent');
         squareAttackBtnEl.textContent = '⚔ Напасть';
+        document.getElementById('squareAttackForm').classList.remove('hidden');
         const msg = (err && err.message) ? err.message : String(err);
         squareInfoErrorEl.textContent = 'Не удалось записать атаку: ' + msg + '. Скорее всего, в правилах Firebase не разрешена запись в узлы "battleHistory"/"roleUsage"/"squares" — обновите Realtime Database Rules (аналогично тому, как это было сделано для "roles"/"userRoles").';
         squareInfoErrorEl.classList.add('visible');
@@ -2313,6 +2413,7 @@
           <div class="battle-history-item">
             <div class="battle-history-item-title">${title}</div>
             ${desc ? `<div class="battle-history-item-desc">${desc}</div>` : ''}
+            ${(item.plannedTime || item.participants) ? `<div class="battle-history-item-desc">${item.plannedTime ? '🕐 ' + escapeHtml(item.plannedTime) + ' МСК' : ''}${item.plannedTime && item.participants ? ' · ' : ''}${item.participants ? '👥 ' + escapeHtml(String(item.participants)) + ' участников' : ''}</div>` : ''}
             ${item.winner ? `<div class="battle-history-item-winner">🏆 Победила фракция ${escapeHtml(item.winner)}</div>` : ''}
             ${dateStr ? `<div class="battle-history-item-date">${dateStr}</div>` : ''}
           </div>
@@ -2321,9 +2422,39 @@
       battleHistoryListEl.innerHTML = html;
     }
 
+    // Красный кружок-уведомление на кнопке "История сражений": число новых
+    // нападений с момента, когда человек последний раз открывал историю
+    // (хранится в браузере). Собственные атаки не считаются.
+    const HISTORY_SEEN_KEY = 'history_seen_at';
+    function historyMaxTs() {
+      return Object.keys(battleHistoryData).reduce((m, k) => Math.max(m, (battleHistoryData[k] || {}).createdAt || 0), 0);
+    }
+    function markHistorySeen() {
+      try { localStorage.setItem(HISTORY_SEEN_KEY, String(historyMaxTs())); } catch (e) {}
+      updateHistoryBadge();
+    }
+    function updateHistoryBadge() {
+      const badgeEl = document.getElementById('historyBadge');
+      if (!badgeEl) return;
+      let seen = null;
+      try { seen = localStorage.getItem(HISTORY_SEEN_KEY); } catch (e) {}
+      if (seen === null) { // первый визит — старые записи не считаем новыми
+        try { localStorage.setItem(HISTORY_SEEN_KEY, String(historyMaxTs())); } catch (e) {}
+        seen = String(historyMaxTs());
+      }
+      const myId = currentUser && currentUser.id;
+      const count = Object.keys(battleHistoryData).filter((k) => {
+        const it = battleHistoryData[k] || {};
+        return it.squareId && (it.createdAt || 0) > Number(seen) && it.attackerId !== myId;
+      }).length;
+      badgeEl.textContent = count > 9 ? '9+' : String(count);
+      badgeEl.classList.toggle('hidden', count === 0);
+    }
+
     battleHistoryRef.on('value', (snap) => {
       battleHistoryData = snap.val() || {};
       renderBattleHistory();
+      if (battleHistoryEl.classList.contains('visible')) markHistorySeen(); else updateHistoryBadge();
     });
 
     battleHistoryClearBtnEl.onclick = () => {
@@ -2337,6 +2468,7 @@
 
     function openBattleHistory() {
       renderBattleHistory();
+      markHistorySeen();
       battleHistoryEl.classList.add('visible');
       battleHistoryBackdropEl.classList.add('visible');
     }
