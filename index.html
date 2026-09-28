@@ -92,10 +92,12 @@
     /* Плашка "атака/защита в день" справа от ника — видна только тем, у кого
        есть роль лидера/зама с настроенным лимитом (attacksPerDay/defensesPerDay).
        Это отдельная плашка (со своим фоном), а не просто текст рядом с именем. */
+    .leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; flex-wrap: wrap; }
     .combat-status-badge {
-      display: flex; align-items: center; gap: 6px;
-      background: #1c1c1e; border-radius: 8px; padding: 4px 8px;
-      margin-left: 2px;
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(18,18,18,.9);
+      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+      border-radius: 12px; padding: 8px 12px;
     }
     .combat-status-badge.hidden { display: none; }
     .combat-badge {
@@ -674,7 +676,7 @@
         <label for="attackParticipantsInput">👥 Участников</label>
         <input type="number" id="attackParticipantsInput" min="10" max="20" step="1" placeholder="10–20">
       </div>
-      <div class="square-attack-form-hint">Нападение возможно с 12:30 до 23:30 по Москве, кроме 16:00–16:30 и 20:00–20:30. Участников — от 10 до 20.</div>
+      <div class="square-attack-form-hint">Нападение возможно с 12:30 до 23:30 по Москве, кроме 16:00–16:30 и 20:00–20:30. Реальный старт — через 15 минут после выбранного времени (например, 14:00 → старт в 14:15). Участников — от 10 до 20.</div>
     </div>
     <div class="info-modal-actions" id="squareInfoActions">
       <button type="button" class="square-attack-btn hidden" id="squareAttackBtn">⚔ Напасть</button>
@@ -756,6 +758,10 @@
             <input type="color" id="newRoleColorInput" value="#5865F2" title="Цвет роли">
             <button id="addRoleBtn">+ Роль</button>
           </div>
+          <div class="combat-global-actions" style="margin-top:8px;">
+            <button type="button" id="syncDepLimitsBtn">⚖ Выровнять лимиты ДЕП с ЛИДЕРАМИ</button>
+          </div>
+          <div class="admin-empty-hint" style="margin-top:6px;">Для каждой фракции лимиты атак/защиты роли ДЕП станут такими же, как у роли ЛИДЕР этой же фракции.</div>
         </div>
         <div class="admin-section">
           <div class="admin-section-title">Выдать роль по Discord ID</div>
@@ -1231,6 +1237,30 @@
       squaresRef.update(updates).catch(showAdminError);
     };
 
+
+    // "⚖ Выровнять лимиты ДЕП с ЛИДЕРАМИ" — для каждой фракции копирует
+    // attacksPerDay/defensesPerDay роли LEADER на роль(и) DEP той же
+    // фракции, чтобы у них был одинаковый суточный лимит.
+    document.getElementById('syncDepLimitsBtn').onclick = () => {
+      const byFactionLeader = {};
+      Object.keys(rolesData).forEach((rid) => {
+        const r = rolesData[rid];
+        if (r && r.rank === 'LEADER' && r.faction) byFactionLeader[r.faction] = r;
+      });
+      const updates = {};
+      let changed = 0;
+      Object.keys(rolesData).forEach((rid) => {
+        const r = rolesData[rid];
+        if (!r || r.rank !== 'DEP' || !r.faction) return;
+        const leader = byFactionLeader[r.faction];
+        if (!leader) return;
+        if (r.attacksPerDay !== leader.attacksPerDay) { updates[`${rid}/attacksPerDay`] = (leader.attacksPerDay != null ? leader.attacksPerDay : null); changed++; }
+        if (r.defensesPerDay !== leader.defensesPerDay) { updates[`${rid}/defensesPerDay`] = (leader.defensesPerDay != null ? leader.defensesPerDay : null); changed++; }
+      });
+      if (!changed) { showAdminError('лимиты уже совпадают — менять нечего'); return; }
+      rolesRef.update(updates).catch(showAdminError);
+    };
+
     document.getElementById('addRoleBtn').onclick = () => {
       const input = document.getElementById('newRoleNameInput');
       const colorInputEl = document.getElementById('newRoleColorInput');
@@ -1269,6 +1299,13 @@
       black: 'https://cdn-world.majestic-files.net/public/master/wiki/map/black/{z}/{x}/{y}.png',
       satellite: 'https://cdn-world.majestic-files.net/public/master/wiki/map/satellite/{z}/{x}/{y}.jpg'
     };
+
+    // Множитель размера квадратов в зависимости от текущего зума карты:
+    // на максимальном зуме (map.getMaxZoom()) квадрат равен ровно указанному
+    // в редакторе размеру, на каждом шаге зума "вниз" — уменьшается.
+    function currentZoomScale() {
+      return Math.pow(1.5, map.getZoom() - map.getMaxZoom());
+    }
 
     const map = L.map('map', {
       crs: L.CRS.Simple,
@@ -1494,14 +1531,11 @@
       authWidgetEl.innerHTML = `
         <img src="${discordAvatarUrl(user)}" alt="">
         <span class="auth-name">${escapeHtml(user.global_name || user.username || user.id || 'Пользователь')}</span>
-        <span class="combat-status-badge hidden" id="combatStatusBadge">
-          <span class="combat-badge attack hidden" id="combatAttackBadge" title="Атак сегодня">⚔ 0/0</span>
-          <span class="combat-badge defense hidden" id="combatDefenseBadge" title="Получено защиты сегодня">🛡 0/0</span>
-        </span>
         <span class="admin-badge" id="userRoleBadge" style="display:none;"></span>
         <button type="button" class="gear-btn" id="adminGearBtn" title="Панель администратора" style="display:none;">⚙</button>
         <button id="discordLogoutBtn">Выйти</button>
       `;
+      if (combatStatusBadgeEl) combatStatusBadgeEl.classList.add('hidden');
       authWidgetEl.querySelector('#discordLogoutBtn').onclick = () => {
         localStorage.removeItem('discord_token');
         renderAuthWidget(null);
@@ -1538,9 +1572,9 @@
     // лимит не задан (∞) — плашка скрыта, чтобы не мешать тем, у кого нет
     // ограничений (обычные роли без faction/лимитов).
     function updateCombatBadges() {
-      const wrapEl = authWidgetEl && authWidgetEl.querySelector('#combatStatusBadge');
-      const attackEl = authWidgetEl && authWidgetEl.querySelector('#combatAttackBadge');
-      const defenseEl = authWidgetEl && authWidgetEl.querySelector('#combatDefenseBadge');
+      const wrapEl = combatStatusBadgeEl;
+      const attackEl = wrapEl && wrapEl.querySelector('#combatAttackBadge');
+      const defenseEl = wrapEl && wrapEl.querySelector('#combatDefenseBadge');
       if (!wrapEl || !attackEl || !defenseEl) return;
       const perms = window.currentPerms || {};
       // Берём usage строго по сегодняшней (МСК) дате — так плашка сама
@@ -1615,6 +1649,22 @@
     };
     authControl.addTo(map);
 
+    // Плашка "атака/защита в день" — отдельный элемент правее ника (не
+    // внутри самой плашки с аватаркой/кнопкой "Выйти"), см. .leaflet-top.leaflet-left.
+    let combatStatusBadgeEl = null;
+    const combatBadgeControl = L.control({ position: 'topleft' });
+    combatBadgeControl.onAdd = function () {
+      combatStatusBadgeEl = L.DomUtil.create('div', 'combat-status-badge hidden');
+      combatStatusBadgeEl.id = 'combatStatusBadge';
+      combatStatusBadgeEl.innerHTML = `
+        <span class="combat-badge attack hidden" id="combatAttackBadge" title="Атак сегодня">⚔ 0/0</span>
+        <span class="combat-badge defense hidden" id="combatDefenseBadge" title="Получено защиты сегодня">🛡 0/0</span>
+      `;
+      L.DomEvent.disableClickPropagation(combatStatusBadgeEl);
+      return combatStatusBadgeEl;
+    };
+    combatBadgeControl.addTo(map);
+
     initDiscordAuth();
     // ============================================================
 
@@ -1681,15 +1731,20 @@
     }
 
     function squareIcon(data, id) {
-      const size = (data && data.size) || 20;
+      const baseSize = (data && data.size) || 20;
+      const size = Math.max(6, Math.round(baseSize * currentZoomScale()));
       const borderWidth = (data && data.borderWidth != null) ? data.borderWidth : 2;
       const borderColor = (data && data.borderColor) || '#ffffff';
       const opacity = (data && data.opacity != null) ? data.opacity : 1;
       const color = (data && data.color) || '#ff5252';
       // Прозрачность применяется только к заливке (через rgba), а не к обводке —
-      // обводка остаётся полностью непрозрачной. Фиксированный пиксельный
-      // размер иконки (iconSize) в сочетании с zoomAnimation:false на карте
-      // гарантирует, что квадрат не меняет размер при масштабировании.
+      // обводка остаётся полностью непрозрачной. zoomAnimation:false нужен,
+      // чтобы Leaflet не растягивал квадраты CSS-transform'ом ПРЯМО ВО ВРЕМЯ
+      // жеста зума; итоговый размер иконки при этом всё равно пересчитывается
+      // под текущий зум через currentZoomScale() и перерисовывается по
+      // событию 'zoomend' (см. ниже), чтобы квадраты выглядели нормально и
+      // на дальнем, и на ближнем плане, а не оставались одного фиксированного
+      // пиксельного размера всегда.
       const label = (data && data.label) ? escapeHtml(data.label) : '';
       const labelHtml = label ? `<span class="map-square-label">${label}</span>` : '';
       // Иконка фракции — маленький кружок в углу квадрата, если квадрату
@@ -1831,6 +1886,18 @@
       }
     }
     setInterval(updateCooldownTimers, 1000);
+
+    // При смене зума карты пересчитываем размер всех квадратов (см.
+    // currentZoomScale) — не трогаем тот, который сам пользователь сейчас
+    // тащит мышью, по той же причине, что и в live-обновлениях из Firebase.
+    map.on('zoomend', () => {
+      Object.keys(squareMarkers).forEach((id) => {
+        const marker = squareMarkers[id];
+        const data = squareData[id];
+        if (!marker || !data || marker._localDragging) return;
+        marker.setIcon(squareIcon(data, id));
+      });
+    });
 
 
     // ===== Материалы и статистика фракций =====
@@ -2137,12 +2204,16 @@
       return true;
     }
 
-    // Момент начала атаки: ближайшее сегодняшнее HH:MM по Москве (UTC+3).
+    // Момент реального начала атаки: выбранное сегодняшнее HH:MM по Москве
+    // (UTC+3) + фиксированная 15-минутная задержка на подготовку (выбрали
+    // 14:00 — атака стартует в 14:15).
+    const ATTACK_PREP_DELAY_MS = 15 * 60 * 1000;
     function attackTimestampFor(hhmm) {
       const [h, m] = hhmm.split(':').map(Number);
       const mskNow = serverNow() + 3 * 60 * 60 * 1000;
       const dayStartMsk = Math.floor(mskNow / 86400000) * 86400000;
-      return dayStartMsk + (h * 60 + m) * 60000 - 3 * 60 * 60 * 1000;
+      const selectedMoment = dayStartMsk + (h * 60 + m) * 60000 - 3 * 60 * 60 * 1000;
+      return selectedMoment + ATTACK_PREP_DELAY_MS;
     }
 
     function performAttack(id, data, extra) {
