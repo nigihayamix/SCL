@@ -472,6 +472,21 @@
 
     .battle-history-modal { width: 360px; }
     .battle-history-body { max-height: 60vh; overflow-y: auto; }
+    .stats-modal { width: 360px; }
+    .stats-list { display: flex; flex-direction: column; gap: 8px; }
+    .stats-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; background: #1c1c1e; border-radius: 10px; padding: 8px 10px; }
+    .stats-name { font-weight: 600; color: #fff; font-size: 13px; }
+    .stats-sub { font-size: 11px; color: #9a9a9a; }
+    .stats-num { text-align: right; font-size: 12px; color: #ddd; font-variant-numeric: tabular-nums; }
+    .stats-num b { display: block; font-size: 15px; color: #ffd166; }
+    .stats-type-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 11px; color: #9a9a9a; }
+    .stats-type-row input { flex: 1; background: #1c1c1e; border: 1px solid #3a3a3c; border-radius: 8px; color: #eee; padding: 6px 8px; font-size: 12px; }
+    .stats-copy-btn { border: 0; border-radius: 8px; width: 30px; height: 30px; background: #2b2b2d; color: #ddd; cursor: pointer; font-size: 14px; }
+    .stats-copy-btn:hover { background: #3a3a3c; }
+    .stats-copy-btn.done { background: #3ba55d; color: #fff; }
+    .stats-row.with-copy { grid-template-columns: 1fr auto auto auto; }
+    .stats-hint { font-size: 11px; color: #777; margin-top: 10px; }
+    .bottom-left-stack { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
     .battle-history-item-winner { font-size: 12px; font-weight: 600; color: #ffd166; margin-top: 4px; }
     .battle-history-toolbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
     .battle-history-clear-btn {
@@ -538,6 +553,10 @@
           <option value="EMS">EMS</option>
           <option value="LSPD">LSPD</option>
         </select>
+      </div>
+      <div class="square-editor-row">
+        <label>📦 Материалов в день</label>
+        <input type="number" id="squareMaterialsInput" min="0" max="1000000" step="1" value="0" placeholder="0">
       </div>
       <div class="square-editor-toggle-row">
         <span class="square-editor-toggle-label" id="squareLockLabel">🔒 Заблокирован (нельзя двигать)</span>
@@ -618,6 +637,23 @@
     <div class="info-modal-footer" id="squareInfoFooter"></div>
   </div>
 
+  <div id="statsBackdrop" class="modal-backdrop"></div>
+  <div id="statsModal" class="info-modal stats-modal">
+    <div class="info-modal-header">
+      <span class="info-modal-title">📊 Статистика фракций</span>
+      <button type="button" class="square-editor-close" id="statsCloseBtn" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="info-modal-body">
+      <div class="stats-type-row" id="statsTypeRow" style="display:none;">
+        <label for="statsTypeInput">type в команде:</label>
+        <input type="text" id="statsTypeInput" value="type" maxlength="30">
+      </div>
+      <div id="statsList" class="stats-list"></div>
+      <div class="stats-hint">Материалы копятся автоматически: сумма выработки «📦 в день» всех квадратов фракции.</div>
+      <button type="button" class="battle-history-clear-btn" id="statsResetBtn" style="display:none;margin-top:10px;">🔄 Сбросить материалы (временно)</button>
+    </div>
+  </div>
+
   <div id="battleHistoryBackdrop" class="modal-backdrop"></div>
   <div id="battleHistoryModal" class="info-modal battle-history-modal">
     <div class="info-modal-header">
@@ -668,6 +704,16 @@
 
       <div class="admin-tab-panel" id="adminTabCombat">
         <div class="admin-section">
+          <div class="admin-section-title">🔔 Уведомления в Discord при атаке</div>
+          <div class="admin-assign-row">
+            <input type="text" id="notifyWebhookInput" placeholder="Webhook URL канала Discord">
+            <button id="notifySaveBtn" type="button">Сохранить</button>
+          </div>
+          <label class="role-perm-toggle" style="margin-top:8px;"><input type="checkbox" id="notifyEnabledInput"> Включить уведомления</label>
+          <div class="admin-empty-hint" style="margin-top:6px;">Роли, которым приходит упоминание, отмечаются галочкой «🔔 Уведомлять» на вкладке ролей. Упоминаются только те, чья фракция совпадает с фракцией атакованного квадрата.</div>
+          <div class="combat-global-actions"><button id="notifyTestBtn" type="button">Отправить тестовое сообщение</button></div>
+        </div>
+        <div class="admin-section">
           <div class="admin-section-title">Суточный расход атаки/защиты по ролям</div>
           <div id="combatMgmtList" class="roles-list"></div>
           <div class="combat-global-actions">
@@ -716,6 +762,15 @@
     // dateKey — дата по МСК вида "2026-09-28", поэтому счётчик сам
     // "обнуляется" каждый день (просто появляется новый узел с датой).
     const roleUsageRef = firebase.database().ref('roleUsage');
+    const notifySettingsRef = firebase.database().ref('settings/discordNotify');
+    let notifySettings = {};
+    notifySettingsRef.on('value', (snap) => {
+      notifySettings = snap.val() || {};
+      const u = document.getElementById('notifyWebhookInput');
+      const c = document.getElementById('notifyEnabledInput');
+      if (u && document.activeElement !== u) u.value = notifySettings.webhookUrl || '';
+      if (c) c.checked = notifySettings.enabled !== false && !!notifySettings.webhookUrl;
+    });
     let rolesData = {};
     let userRolesData = {};
     let roleUsageData = {};
@@ -730,6 +785,10 @@
     const FACTION_ICONS = {
       FIB: '🕵️', WN: '💰', SANG: '🩸', SD: '⭐', EMS: '🚑', LSPD: '👮'
     };
+
+    // Полные названия и игровые номера фракций (для команды /givematerials).
+    const FACTION_NAMES = { LSPD: 'LSPD', EMS: 'EMS', SD: 'SD (Sheriff)', SANG: 'SANG', WN: 'Weazel News', FIB: 'FIB' };
+    const FACTION_IDS = { LSPD: 1, EMS: 2, SD: 3, SANG: 4, WN: 6, FIB: 7 };
 
     // Задержка на повторную атаку одного и того же квадрата — 1 час.
     // (объявлено рано, до всех live-подписок Firebase, чтобы избежать
@@ -840,6 +899,7 @@
       safe(() => updateCombatBadges());
       safe(() => updateCooldownTimers());
       safe(() => renderBattleHistory());
+      safe(() => renderStats());
       safe(() => updateSquareEditVisibility());
       safe(() => { if (adminPanelOpen) renderAdminPanelContent(); });
       return perms;
@@ -943,6 +1003,7 @@
           <label class="role-perm-toggle"><input type="checkbox" data-perm="deleteSquares" data-role-id="${roleId}" ${role.deleteSquares ? 'checked' : ''}> Удаление</label>
           <label class="role-perm-toggle"><input type="checkbox" data-perm="attackSquares" data-role-id="${roleId}" ${role.attackSquares ? 'checked' : ''}> Атака</label>
           <label class="role-perm-toggle"><input type="checkbox" data-perm="manageRoles" data-role-id="${roleId}" ${role.manageRoles ? 'checked' : ''}> Роли</label>
+          <label class="role-perm-toggle" title="Участники этой роли получат упоминание в Discord, когда атакуют квадрат их фракции"><input type="checkbox" data-perm="notifyOnAttack" data-role-id="${roleId}" ${role.notifyOnAttack ? 'checked' : ''}> 🔔 Уведомлять</label>
           <span class="role-limit-group">⚔ <input type="number" min="0" max="20" class="role-limit-input" data-limit="attacksPerDay" data-role-id="${roleId}" value="${role.attacksPerDay != null ? role.attacksPerDay : ''}" placeholder="∞"> / день</span>
           <span class="role-limit-group">🛡 <input type="number" min="0" max="20" class="role-limit-input" data-limit="defensesPerDay" data-role-id="${roleId}" value="${role.defensesPerDay != null ? role.defensesPerDay : ''}" placeholder="∞"> / день</span>
           <button type="button" class="role-delete-btn" data-role-id="${roleId}" title="Удалить роль">✕</button>
@@ -1053,6 +1114,43 @@
         };
       });
     }
+
+
+    // --- Уведомления в Discord через webhook канала. Приложение напрямую
+    // писать в личку не может (для этого нужен бот-сервер), поэтому сообщение
+    // уходит в канал с упоминанием (@) участников защищающейся фракции. ---
+    function sendDiscordPayload(content) {
+      const url = notifySettings.webhookUrl;
+      if (!url || notifySettings.enabled === false) return Promise.resolve();
+      return fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, allowed_mentions: { parse: ['users'] } })
+      });
+    }
+    function notifyAttack(squareData_, attackerName, attackerFaction, attackerRoleName) {
+      const sqFaction = squareData_ && squareData_.faction;
+      const roleIds = Object.keys(rolesData).filter((rid) => {
+        const r = rolesData[rid];
+        return r && r.notifyOnAttack && (!r.faction || r.faction === sqFaction);
+      });
+      const mentions = Object.keys(userRolesData)
+        .filter((uid) => roleIds.includes(userRolesData[uid].roleId))
+        .map((uid) => `<@${uid}>`);
+      const label = (squareData_ && squareData_.label) || 'Без названия';
+      const by = attackerFaction ? `фракция **${attackerFaction}**` : `**${attackerName}**`;
+      const text = `${mentions.join(' ')} ⚔ На вас напала ${by}! Атакован квадрат «${label}»${attackerFaction ? ` (нападавший: ${attackerName}${attackerRoleName ? ', ' + attackerRoleName : ''})` : ''}.`.trim();
+      return sendDiscordPayload(text).catch((e) => console.error('Discord notify failed', e));
+    }
+    document.getElementById('notifySaveBtn').onclick = () => {
+      const url = document.getElementById('notifyWebhookInput').value.trim();
+      if (url && !/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(url)) { showAdminError('это не похоже на Discord webhook URL'); return; }
+      notifySettingsRef.set({ webhookUrl: url || null, enabled: document.getElementById('notifyEnabledInput').checked }).catch(showAdminError);
+    };
+    document.getElementById('notifyTestBtn').onclick = () => {
+      if (!notifySettings.webhookUrl) { showAdminError('сначала сохраните webhook URL'); return; }
+      sendDiscordPayload('✅ Тест: уведомления об атаках подключены.').catch(showAdminError);
+    };
 
     // Кнопка "Сбросить КД атаки всех квадратов" — снимает часовой КД со
     // всех квадратов сразу (очищает lastAttackedAt), не трогая суточные
@@ -1468,10 +1566,13 @@
     const bottomLeftMenu = L.control({ position: 'bottomleft' });
     let battleHistoryBtnEl = null;
     bottomLeftMenu.onAdd = function () {
-      const div = L.DomUtil.create('div', 'bottom-left-menu');
+      const div = L.DomUtil.create('div', 'bottom-left-stack');
       div.innerHTML = `
-        <button id="addSquareBtn" class="hidden-btn">➕ Квадрат</button>
-        <button id="battleHistoryBtn">📜 История сражений</button>
+        <div class="bottom-left-menu"><button id="statsBtn">📊 Статистика</button></div>
+        <div class="bottom-left-menu">
+          <button id="addSquareBtn" class="hidden-btn">➕ Квадрат</button>
+          <button id="battleHistoryBtn">📜 История сражений</button>
+        </div>
       `;
       L.DomEvent.disableClickPropagation(div);
       addSquareBtnEl = div.querySelector('#addSquareBtn');
@@ -1481,6 +1582,7 @@
     bottomLeftMenu.addTo(map);
     document.getElementById('addSquareBtn').onclick = () => toggleSquareMode();
     document.getElementById('battleHistoryBtn').onclick = () => openBattleHistory();
+    document.getElementById('statsBtn').onclick = () => openStats();
 
     setTimeout(() => {
       const darkBtn=document.getElementById('darkBtn');
@@ -1640,11 +1742,60 @@
     }
     setInterval(updateCooldownTimers, 1000);
 
+
+    // ===== Материалы и статистика фракций =====
+    // Каждому квадрату задаётся выработка "материалов в день". Материалы
+    // фракции копятся непрерывно: amount (на момент updatedAt) + выработка
+    // всех её квадратов × прошедшее время. Значение на экране считается
+    // "на лету"; в Firebase фиксируется (settle) только при изменении
+    // выработки/владельца квадрата и при сбросе.
+    const statsRef = firebase.database().ref('stats/materials');
+    let materialsStats = {};
+    let serverOffset = 0;
+    const MS_DAY = 24 * 60 * 60 * 1000;
+    firebase.database().ref('.info/serverTimeOffset').on('value', (s) => { serverOffset = s.val() || 0; });
+    function serverNow() { return Date.now() + serverOffset; }
+    function factionSquares(f) { return Object.keys(squareData).filter((id) => squareData[id] && squareData[id].faction === f); }
+    function factionRate(f) { return factionSquares(f).reduce((sum, id) => sum + (Number(squareData[id].materialsPerDay) || 0), 0); }
+    function factionMaterials(f) {
+      const st = materialsStats[f];
+      if (!st) return 0;
+      return (st.amount || 0) + factionRate(f) * Math.max(0, serverNow() - (st.updatedAt || serverNow())) / MS_DAY;
+    }
+    function settleFaction(f) {
+      if (!f) return Promise.resolve();
+      const rate = factionRate(f);
+      return statsRef.child(f).transaction((cur) => {
+        const now = serverNow();
+        if (!cur) return { amount: 0, updatedAt: now };
+        return { amount: (cur.amount || 0) + rate * Math.max(0, now - (cur.updatedAt || now)) / MS_DAY, updatedAt: now };
+      }).catch((e) => console.error('settle failed', e));
+    }
+    function settleFactions(list) {
+      return Promise.all([...new Set(list.filter(Boolean))].map(settleFaction));
+    }
+    // Стартовая точка отсчёта для фракций, у которых ещё нет записи.
+    function ensureStatsInit() {
+      FACTIONS.forEach((f) => {
+        if (materialsStats[f] || !factionSquares(f).length || ensureStatsInit._busy[f]) return;
+        ensureStatsInit._busy[f] = true;
+        statsRef.child(f).transaction((cur) => cur ? undefined : { amount: 0, updatedAt: serverNow() })
+          .catch(() => {}).then(() => { ensureStatsInit._busy[f] = false; });
+      });
+    }
+    ensureStatsInit._busy = {};
+    statsRef.on('value', (snap) => {
+      materialsStats = snap.val() || {};
+      ensureStatsInit();
+      if (typeof renderStats === 'function') { try { renderStats(); } catch (e) {} }
+    });
+
     squaresRef.on('child_added', (snap) => {
       squareData[snap.key] = snap.val();
       upsertSquareMarker(snap.key, snap.val());
       refreshSquaresInteractivity();
       updateCooldownTimers();
+      ensureStatsInit();
     });
     squaresRef.on('child_changed', (snap) => {
       squareData[snap.key] = snap.val();
@@ -1672,6 +1823,7 @@
     const lockLabelEl = document.getElementById('squareLockLabel');
     const descriptionInput = document.getElementById('squareDescriptionInput');
     const factionInput = document.getElementById('squareFactionInput');
+    const materialsInput = document.getElementById('squareMaterialsInput');
     const deleteBtn = document.getElementById('squareDeleteBtn');
     const previewEl = document.getElementById('squarePreview');
 
@@ -1719,6 +1871,7 @@
       lockedInput.checked = data.locked !== false; // по умолчанию заблокирован
       descriptionInput.value = data.description || '';
       factionInput.value = data.faction || '';
+      materialsInput.value = data.materialsPerDay != null ? data.materialsPerDay : 0;
       updateLockLabel();
       updateRangeLabels();
       updatePreview();
@@ -1777,19 +1930,25 @@
         locked: lockedInput.checked,
         description: descriptionInput.value.trim(),
         faction: factionInput.value || null,
+        materialsPerDay: Math.max(0, Math.floor(Number(materialsInput.value) || 0)),
         updatedAt: firebase.database.ServerValue.TIMESTAMP
       };
-      if (editingSquareId) {
-        squaresRef.child(editingSquareId).update(payload);
-      } else if (editingSquareLatLng) {
-        squaresRef.push({ lat: editingSquareLatLng.lat, lng: editingSquareLatLng.lng, ...payload });
-      }
+      const id = editingSquareId, ll = editingSquareLatLng;
+      const oldFaction = id ? (squareData[id] || {}).faction : null;
       closeSquareEditor();
+      // Перед изменением фракции/выработки "закрываем" накопленные
+      // материалы по старым условиям, чтобы подсчёт оставался точным.
+      settleFactions([oldFaction, payload.faction]).then(() => {
+        if (id) squaresRef.child(id).update(payload);
+        else if (ll) squaresRef.push({ lat: ll.lat, lng: ll.lng, ...payload });
+      });
     };
     deleteBtn.onclick = () => {
       if (!window.canDeleteSquares) return;
-      if (editingSquareId) squaresRef.child(editingSquareId).remove();
+      const id = editingSquareId;
+      const f = id ? (squareData[id] || {}).faction : null;
       closeSquareEditor();
+      if (id) settleFactions([f]).then(() => squaresRef.child(id).remove());
     };
     document.getElementById('squareCancelBtn').onclick = closeSquareEditor;
     document.getElementById('squareCloseBtn').onclick = closeSquareEditor;
@@ -1898,6 +2057,7 @@
         createdAt: firebase.database.ServerValue.TIMESTAMP
       }));
 
+      notifyAttack(data, attackerName, perms.faction, perms.roleName);
       return Promise.all(tasks).then((res) => {
         // Подстраховка: сразу пересчитываем плашку атаки/защиты и таймер КД
         // на квадрате, не дожидаясь live-события от Firebase (обычно оно и
@@ -1942,7 +2102,7 @@
       squareInfoTitleEl.textContent = data.label || 'Без названия';
       if (data.faction) {
         const fIcon = FACTION_ICONS[data.faction] ? FACTION_ICONS[data.faction] + ' ' : '';
-        squareInfoFactionEl.textContent = `Фракция: ${fIcon}${data.faction}`;
+        squareInfoFactionEl.textContent = `Фракция: ${fIcon}${data.faction}` + (data.materialsPerDay > 0 ? ` · 📦 ${data.materialsPerDay}/день` : '');
         squareInfoFactionEl.style.display = 'block';
       } else {
         squareInfoFactionEl.style.display = 'none';
@@ -2042,7 +2202,9 @@
     };
     function sqEditApply(fields, okText) {
       if (!window.canEditSquareResult || !infoSquareId) return Promise.resolve();
-      return squaresRef.child(infoSquareId).update(Object.assign({ updatedAt: firebase.database.ServerValue.TIMESTAMP }, fields))
+      const oldF = (squareData[infoSquareId] || {}).faction;
+      return settleFactions([oldF, fields.faction])
+        .then(() => squaresRef.child(infoSquareId).update(Object.assign({ updatedAt: firebase.database.ServerValue.TIMESTAMP }, fields)))
         .then(() => sqEditMsg(okText)).catch((e) => sqEditMsg('Ошибка: ' + ((e && e.message) || e), true));
     }
     document.getElementById('sqEditTransferBtn').onclick = () => {
@@ -2060,6 +2222,8 @@
       const att = latestAttackFor(infoSquareId);
       if (!att) { sqEditMsg('В истории нет атаки без результата на этот квадрат', true); return; }
       const sqLabel = (infoSquareData && infoSquareData.label) || 'Без названия';
+      const settleP = document.getElementById('sqEditWinnerTransfer').checked
+        ? settleFactions([(squareData[infoSquareId] || {}).faction, winner]) : Promise.resolve();
       const tasks = [battleHistoryRef.child(att.key).update({
         winner,
         winnerSetBy: currentUser.global_name || currentUser.username,
@@ -2070,10 +2234,10 @@
         if (winner && winner !== cur) {
           const fields = { faction: winner, updatedAt: firebase.database.ServerValue.TIMESTAMP };
           if (FACTION_COLORS[winner]) fields.color = FACTION_COLORS[winner];
-          tasks.push(squaresRef.child(infoSquareId).update(fields));
+          tasks.push(settleP.then(() => squaresRef.child(infoSquareId).update(fields)));
         }
       }
-      Promise.all(tasks).then(() => sqEditMsg(`Победила фракция ${winner} («${sqLabel}»)`))
+      settleP.then(() => Promise.all(tasks)).then(() => sqEditMsg(`Победила фракция ${winner} («${sqLabel}»)`))
         .catch((e) => sqEditMsg('Ошибка: ' + ((e && e.message) || e), true));
     };
 
@@ -2182,6 +2346,82 @@
     }
     document.getElementById('battleHistoryCloseBtn').onclick = closeBattleHistory;
     battleHistoryBackdropEl.onclick = closeBattleHistory;
+
+    // --- Статистика: захваченные квадраты и материалы по фракциям ---
+    const statsModalEl = document.getElementById('statsModal');
+    const statsBackdropEl = document.getElementById('statsBackdrop');
+    const statsListEl = document.getElementById('statsList');
+    const statsResetBtnEl = document.getElementById('statsResetBtn');
+    const statsCopied = {}; // faction -> время до которого показываем "✓"
+    const statsTypeInputEl = document.getElementById('statsTypeInput');
+    try { statsTypeInputEl.value = localStorage.getItem('stats_type') || 'type'; } catch (e) {}
+    statsTypeInputEl.onchange = () => { try { localStorage.setItem('stats_type', statsTypeInputEl.value.trim() || 'type'); } catch (e) {} };
+
+    function givematerialsCommand(f) {
+      const type = statsTypeInputEl.value.trim() || 'type';
+      return `/givematerials ${FACTION_IDS[f]} ${type} ${Math.floor(factionMaterials(f))}`;
+    }
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+      return new Promise((resolve) => {
+        const ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        ta.remove(); resolve();
+      });
+    }
+    // Суперадмин и админы (stadmin/admin) видят все фракции и кнопку
+    // копирования команды; остальные — только статистику своей фракции.
+    function renderStats() {
+      const perms = window.currentPerms || {};
+      const isAdminView = !!window.canEditSquareResult;
+      statsResetBtnEl.style.display = perms.owner ? 'inline-block' : 'none';
+      document.getElementById('statsTypeRow').style.display = isAdminView ? 'flex' : 'none';
+      if (!statsModalEl.classList.contains('visible')) return;
+      let list = FACTIONS.slice();
+      if (!isAdminView) list = perms.faction ? [perms.faction] : [];
+      const rows = list.map((f) => ({ f, squares: factionSquares(f).length, rate: factionRate(f), mats: factionMaterials(f) }))
+        .sort((a, b) => b.mats - a.mats || b.squares - a.squares);
+      if (!rows.length) {
+        statsListEl.innerHTML = '<div class="battle-history-empty">Статистика доступна участникам фракций и администраторам.</div>';
+        return;
+      }
+      const now = Date.now();
+      statsListEl.innerHTML = rows.map((r) => `
+        <div class="stats-row${isAdminView ? ' with-copy' : ''}">
+          <div><div class="stats-name">${FACTION_ICONS[r.f] || ''} ${escapeHtml(FACTION_NAMES[r.f] || r.f)}</div><div class="stats-sub">+${r.rate} 📦/день${isAdminView ? ` · №${FACTION_IDS[r.f]}` : ''}</div></div>
+          <div class="stats-num"><b>${r.squares}</b>квадратов</div>
+          <div class="stats-num"><b>${Math.floor(r.mats)}</b>материалов</div>
+          ${isAdminView ? `<button type="button" class="stats-copy-btn${statsCopied[r.f] > now ? ' done' : ''}" data-copy-faction="${r.f}" title="Скопировать команду /givematerials">${statsCopied[r.f] > now ? '✓' : '📋'}</button>` : ''}
+        </div>`).join('');
+    }
+    statsListEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-copy-faction]');
+      if (!btn || !window.canEditSquareResult) return;
+      const f = btn.dataset.copyFaction;
+      copyText(givematerialsCommand(f)).then(() => { statsCopied[f] = Date.now() + 1500; renderStats(); });
+    });
+    function openStats() {
+      statsModalEl.classList.add('visible');
+      statsBackdropEl.classList.add('visible');
+      renderStats();
+    }
+    function closeStats() {
+      statsModalEl.classList.remove('visible');
+      statsBackdropEl.classList.remove('visible');
+    }
+    document.getElementById('statsCloseBtn').onclick = closeStats;
+    statsBackdropEl.onclick = closeStats;
+    setInterval(renderStats, 1000);
+    statsResetBtnEl.onclick = () => {
+      if (!(window.currentPerms && window.currentPerms.owner)) return;
+      if (!confirm('Сбросить накопленные материалы всех фракций до 0?')) return;
+      const now = serverNow();
+      const obj = {};
+      FACTIONS.forEach((f) => { obj[f] = { amount: 0, updatedAt: now }; });
+      statsRef.set(obj).catch((e) => alert('Не удалось сбросить: ' + ((e && e.message) || e)));
+    };
     // ====================================================================
   </script>
 </body>
