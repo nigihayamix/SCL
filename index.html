@@ -35,6 +35,32 @@
     .layer-switcher button:hover { background:#2b2b2b; }
     .layer-switcher button.active { background:#fff; color:#111; }
 
+    /* Единый тёмный стиль полос прокрутки и ползунков под цвет интерфейса */
+    * { scrollbar-width: thin; scrollbar-color: #4a4d6a transparent; }
+    *::-webkit-scrollbar { width: 8px; height: 8px; }
+    *::-webkit-scrollbar-track { background: transparent; }
+    *::-webkit-scrollbar-thumb { background: #3a3d55; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+    *::-webkit-scrollbar-thumb:hover { background: #5865F2; background-clip: padding-box; }
+    *::-webkit-scrollbar-corner { background: transparent; }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none; height: 18px; background: transparent; --pct: 50%;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px; border-radius: 6px;
+      background: linear-gradient(to right, #5865F2 0, #5865F2 var(--pct), #2b2b30 var(--pct), #2b2b30 100%);
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%;
+      background: #7983f5; border: 2px solid #1c1c1e; margin-top: -5px;
+      box-shadow: 0 0 0 1px #5865F2, 0 2px 6px rgba(0,0,0,.5); transition: transform .12s ease;
+    }
+    input[type="range"]:hover::-webkit-slider-thumb { transform: scale(1.15); }
+    input[type="range"]::-moz-range-track { height: 6px; border-radius: 6px; background: #2b2b30; }
+    input[type="range"]::-moz-range-progress { height: 6px; border-radius: 6px; background: #5865F2; }
+    input[type="range"]::-moz-range-thumb {
+      width: 12px; height: 12px; border-radius: 50%; background: #7983f5;
+      border: 2px solid #1c1c1e; box-shadow: 0 0 0 1px #5865F2;
+    }
     .auth-widget {
       background: rgba(18,18,18,.9);
       padding: 8px 10px;
@@ -342,6 +368,8 @@
       box-shadow: 0 2px 6px rgba(0,0,0,.5); pointer-events: none;
     }
     .history-badge.hidden { display: none; }
+    .history-badge.pop { animation: badgePop .5s ease; }
+    @keyframes badgePop { 0% { transform: scale(.4); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
     .square-edit-toggle-btn {
       flex: 1; border: 0; border-radius: 10px; padding: 10px; margin-left: 8px;
       background: #2b2b2d; color: #ddd; cursor: pointer; font-size: 13px; font-weight: 600;
@@ -533,19 +561,26 @@
     }
     /* Онлайн-таймер обратного отсчёта КД атаки — показывается под квадратом,
        пока он находится на КД (обновляется каждую секунду через JS). */
+    /* Таймер и огонь ВНУТРИ квадрата: огонь по центру, цифры поверх него. */
     .square-cooldown {
-      position: absolute; left: 50%; bottom: -22px; transform: translateX(-50%);
-      background: rgba(10,10,12,.9); color: #ffb4b4; font-size: 10px; font-weight: 700;
-      padding: 2px 6px; border-radius: 6px; white-space: nowrap;
-      z-index: 6; pointer-events: none; display: none;
-      font-variant-numeric: tabular-nums; align-items: center; justify-content: center;
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+      display: none; align-items: center; justify-content: center;
+      z-index: 6; pointer-events: none; white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
-    .square-cooldown .square-cooldown-text { position: relative; z-index: 2; text-shadow: 0 1px 3px rgba(0,0,0,.9); }
-    .square-cooldown .square-fire { display: none; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -55%); font-size: 30px; line-height: 1; z-index: 1; opacity: .9; }
-    /* Таймер до начала запланированной атаки: огонь за цифрами */
-    .square-cooldown.pending { background: rgba(10,10,12,.35); color: #fff; font-size: 12px; padding: 5px 12px; min-width: 46px; bottom: -30px; }
-    .square-cooldown.pending .square-fire { display: block; animation: fireFlicker .9s ease-in-out infinite alternate; }
-    @keyframes fireFlicker { from { transform: translate(-50%, -55%) scale(.92); } to { transform: translate(-50%, -58%) scale(1.08); } }
+    .square-cooldown .square-cooldown-text {
+      position: relative; z-index: 2; color: #fff; font-size: 10px; font-weight: 800;
+      text-shadow: 0 0 3px #000, 0 1px 2px #000, 0 0 6px rgba(0,0,0,.8);
+    }
+    .square-cooldown .square-fire {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%, -52%);
+      line-height: 1; z-index: 1;
+    }
+    /* Идёт отсчёт до начала атаки — цветной огонь */
+    .square-cooldown.pending .square-fire { animation: fireFlicker .9s ease-in-out infinite alternate; }
+    /* Атака началась, идёт КД — тот же огонь, но белый */
+    .square-cooldown.cooling .square-fire { filter: brightness(0) invert(1); opacity: .75; }
+    @keyframes fireFlicker { from { transform: translate(-50%, -52%) scale(.92); } to { transform: translate(-50%, -56%) scale(1.1); } }
   </style>
 </head>
 <body>
@@ -639,7 +674,7 @@
         <label for="attackParticipantsInput">👥 Участников</label>
         <input type="number" id="attackParticipantsInput" min="10" max="20" step="1" placeholder="10–20">
       </div>
-      <div class="square-attack-form-hint">Нападение возможно с 12:00 до 16:00 и с 20:00 до 24:00 по Москве. Участников — от 10 до 20.</div>
+      <div class="square-attack-form-hint">Нападение возможно с 12:30 до 23:30 по Москве, кроме 16:00–16:30 и 20:00–20:30. Участников — от 10 до 20.</div>
     </div>
     <div class="info-modal-actions" id="squareInfoActions">
       <button type="button" class="square-attack-btn hidden" id="squareAttackBtn">⚔ Напасть</button>
@@ -1664,7 +1699,7 @@
       // Плейсхолдер для онлайн-таймера обратного отсчёта КД атаки — сам
       // текст и видимость обновляются отдельно, каждую секунду, функцией
       // updateCooldownTimers(), без пересоздания иконки (см. ниже).
-      const cooldownHtml = `<span class="square-cooldown"><span class="square-fire">🔥</span><span class="square-cooldown-text"></span></span>`;
+      const cooldownHtml = `<span class="square-cooldown"><span class="square-fire" style="font-size:${Math.max(size, 14)}px">🔥</span><span class="square-cooldown-text"></span></span>`;
       return L.divIcon({
         className: '',
         html: `<div class="map-square" style="width:${size}px;height:${size}px;background:${hexToRgba(color, opacity)};border:${borderWidth}px solid ${borderColor};">${labelHtml}${factionIconHtml}${cooldownHtml}</div>`,
@@ -1783,6 +1818,7 @@
         if (st) {
           cdEl.querySelector('.square-cooldown-text').textContent = formatMMSS(st.remaining);
           cdEl.classList.toggle('pending', st.state === 'pending');
+          cdEl.classList.toggle('cooling', st.state === 'cooldown');
           cdEl.style.display = 'flex';
         } else {
           cdEl.style.display = 'none';
@@ -1894,7 +1930,16 @@
     }
     lockedInput.addEventListener('change', updateLockLabel);
 
+    // Заливка дорожки ползунков до текущего значения (для Chrome/Safari).
+    function refreshRangeFills() {
+      document.querySelectorAll('input[type="range"]').forEach((r) => {
+        const min = Number(r.min || 0), max = Number(r.max || 100);
+        r.style.setProperty('--pct', (((Number(r.value) - min) / (max - min)) * 100) + '%');
+      });
+    }
+    document.addEventListener('input', (e) => { if (e.target && e.target.type === 'range') refreshRangeFills(); });
     function updateRangeLabels() {
+      refreshRangeFills();
       document.getElementById('squareBorderWidthVal').textContent = borderWidthInput.value + 'px';
       document.getElementById('squareSizeVal').textContent = sizeInput.value + 'px';
       document.getElementById('squareOpacityVal').textContent = opacityInput.value + '%';
@@ -2080,13 +2125,16 @@
 
     // Собственно отправка атаки — общая для модальной кнопки "Напасть" и
     // для отдельной кнопки атаки прямо на квадрате. Возвращает Promise.
-    // Допустимое время нападения (МСК): 12:00–16:00 и 20:00–24:00.
-    // Запрещено 00:00–12:00 и 16:00–20:00.
+    // Допустимое время нападения (МСК): с 12:30 до 23:30, кроме окон
+    // 16:00–16:30 и 20:00–20:30 (12:00–12:30 тоже недоступно, т.к. раньше 12:30).
     function isAllowedAttackTime(hhmm) {
       const m = /^(\d{2}):(\d{2})$/.exec(hhmm || '');
       if (!m) return false;
       const mins = Number(m[1]) * 60 + Number(m[2]);
-      return (mins >= 12 * 60 && mins < 16 * 60) || (mins >= 20 * 60 && mins < 24 * 60);
+      if (mins < 12 * 60 + 30 || mins > 23 * 60 + 30) return false;
+      if (mins >= 16 * 60 && mins < 16 * 60 + 30) return false;
+      if (mins >= 20 * 60 && mins < 20 * 60 + 30) return false;
+      return true;
     }
 
     // Момент начала атаки: ближайшее сегодняшнее HH:MM по Москве (UTC+3).
@@ -2219,7 +2267,7 @@
       const participants = Number(document.getElementById('attackParticipantsInput').value);
       let formError = null;
       if (!plannedTime) formError = 'Выберите время нападения.';
-      else if (!isAllowedAttackTime(plannedTime)) formError = 'Это время недоступно. Нападение возможно с 12:00 до 16:00 и с 20:00 до 24:00 по Москве.';
+      else if (!isAllowedAttackTime(plannedTime)) formError = 'Это время недоступно. Нападение возможно с 12:30 до 23:30 по Москве, кроме 16:00–16:30 и 20:00–20:30.';
       else if (attackTimestampFor(plannedTime) <= serverNow()) formError = 'Это время уже прошло — выберите более позднее время сегодня (по Москве).';
       else if (!Number.isInteger(participants) || participants < 10 || participants > 20) formError = 'Укажите количество участников от 10 до 20.';
       if (formError) {
@@ -2445,10 +2493,15 @@
       const myId = currentUser && currentUser.id;
       const count = Object.keys(battleHistoryData).filter((k) => {
         const it = battleHistoryData[k] || {};
-        return it.squareId && (it.createdAt || 0) > Number(seen) && it.attackerId !== myId;
+        return it.squareId && (it.createdAt || 0) > Number(seen);
       }).length;
+      const prev = updateHistoryBadge._prev || 0;
       badgeEl.textContent = count > 9 ? '9+' : String(count);
       badgeEl.classList.toggle('hidden', count === 0);
+      if (count > prev) { // пришло новое нападение — короткая "пульсация"
+        badgeEl.classList.remove('pop'); void badgeEl.offsetWidth; badgeEl.classList.add('pop');
+      }
+      updateHistoryBadge._prev = count;
     }
 
     battleHistoryRef.on('value', (snap) => {
