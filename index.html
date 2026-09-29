@@ -93,25 +93,29 @@
        есть роль лидера/зама с настроенным лимитом (attacksPerDay/defensesPerDay).
        Это отдельная плашка (со своим фоном), а не просто текст рядом с именем. */
     .leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; flex-wrap: wrap; }
+    /* Плашки атаки / защиты / КД — в цвет плашки с ником (auth-widget) */
     .combat-status-badge {
-      display: flex; align-items: center; gap: 16px;
-      background: #fff; color: #1b1b1f;
-      box-shadow: 0 4px 18px rgba(0,0,0,.35);
-      border-radius: 14px; padding: 9px 16px;
+      display: flex; align-items: center; gap: 8px;
+      background: none; box-shadow: none; padding: 0; border-radius: 0;
     }
     .combat-status-badge.hidden { display: none; }
     .combat-badge {
-      display: flex; align-items: center; gap: 7px;
-      font-size: 15px; font-weight: 700; color: #1b1b1f; white-space: nowrap;
-      font-variant-numeric: tabular-nums;
+      display: flex; align-items: center; gap: 7px; box-sizing: border-box;
+      min-height: 44px; padding: 0 12px;
+      background: rgba(18,18,18,.9); box-shadow: 0 4px 18px rgba(0,0,0,.35);
+      border-radius: 12px; color: #ddd; font-size: 14px; font-weight: 700;
+      white-space: nowrap; font-variant-numeric: tabular-nums;
     }
-    .combat-badge .ico { display: flex; width: 18px; height: 18px; color: #ef5a22; --hand: #fff; }
+    .combat-badge .ico { display: flex; width: 16px; height: 16px; --hand: #121212; }
     .combat-badge .ico svg { width: 100%; height: 100%; display: block; }
+    .combat-badge.attack .ico { color: #ff6b5e; }
+    .combat-badge.defense .ico { color: #6cb4ff; }
+    .combat-badge.cd .ico { color: #ff9a5c; }
+    .combat-badge.cd.def .ico { color: #6cb4ff; }
     .combat-badge.hidden { display: none; }
-    .combat-badge.cd.def .ico { color: #2f7bd8; }
-    .combat-badge.full b { color: #e0342b; }
+    .combat-badge.full b { color: #ff5252; }
 
-    /* Плашки "ВЫ НАПАЛИ" / "НА ВАС НАПАЛИ" — видят все роли фракции */
+    /* Плашки "ВЫ НАПАЛИ" (красная) / "НА ВАС НАПАЛИ" (оранжевая) — без таймера */
     .attack-banners {
       position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
       display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -119,16 +123,29 @@
     }
     @media (max-width: 900px) { .attack-banners { top: 64px; } }
     .attack-banner {
-      display: flex; align-items: center; gap: 12px;
-      background: linear-gradient(180deg, #ff6d2e, #f0521a);
-      color: #fff; border-radius: 14px; padding: 10px 18px;
+      display: flex; align-items: center; gap: 10px;
+      color: #fff; border-radius: 14px; padding: 10px 20px;
       font-weight: 800; font-size: 15px; letter-spacing: .3px; text-transform: uppercase;
-      box-shadow: 0 6px 22px rgba(240,82,26,.45); white-space: nowrap;
+      white-space: nowrap;
     }
-    .attack-banner .ico { display: flex; width: 20px; height: 20px; color: #fff; --hand: #f0521a; }
+    .attack-banner.attack { background: linear-gradient(180deg, #f2493c, #d42a1e); box-shadow: 0 6px 22px rgba(220,40,30,.5); }
+    .attack-banner.defense { background: linear-gradient(180deg, #ff6d2e, #f0521a); box-shadow: 0 6px 22px rgba(240,82,26,.45); }
+    .attack-banner .ico { display: flex; width: 20px; height: 20px; color: #fff; }
     .attack-banner .ico svg { width: 100%; height: 100%; display: block; }
-    .attack-banner .sep { width: 1px; height: 22px; background: rgba(255,255,255,.5); }
-    .attack-banner .time { display: flex; align-items: center; gap: 7px; font-variant-numeric: tabular-nums; }
+    .appeal-top { margin-top: 8px; }
+    .appeal-top button { border: 0; border-radius: 8px; padding: 9px 12px; color: #ddd; background: transparent; cursor: pointer; font-size: 14px; }
+    .appeal-top button:hover { background: #2b2b2b; }
+    .preview-note { font-size: 11px; color: #8d8d92; text-align: center; margin-top: 6px; min-height: 14px; }
+    .appeal-modal .info-modal-body { max-height: 58vh; overflow-y: auto; }
+    .appeal-reply { background: #1b2a21; border-left: 3px solid #3b7d4f; border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+    .appeal-reply-head { font-size: 12px; color: #9fe0b4; margin-bottom: 3px; }
+    .appeal-reply-form { margin-top: 8px; }
+    .appeal-reply-form textarea {
+      width: 100%; box-sizing: border-box; min-height: 64px; resize: vertical;
+      background: #26262a; color: #ddd; border: 1px solid #3a3a3e; border-radius: 8px;
+      padding: 8px; font: inherit; font-size: 13px;
+    }
+    .appeal-reply-form button { margin-top: 6px; border: 0; border-radius: 8px; padding: 7px 12px; background: #3b7d4f; color: #fff; cursor: pointer; font-size: 12px; }
 
     /* Панель "Редактор" */
     .editor-panel {
@@ -340,7 +357,7 @@
     .square-editor-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
     .square-editor-preview {
       display: flex; justify-content: center; align-items: center;
-      height: 56px; border-radius: 10px;
+      height: 120px; border-radius: 10px; overflow: hidden;
       background-image:
         linear-gradient(45deg, #2a2a2a 25%, transparent 25%),
         linear-gradient(-45deg, #2a2a2a 25%, transparent 25%),
@@ -732,6 +749,7 @@
     </div>
     <div class="square-editor-body">
       <div class="square-editor-preview"><div id="squarePreview" class="map-square"></div></div>
+      <div class="preview-note" id="squarePreviewNote"></div>
       <div class="square-editor-row">
         <label>Подпись</label>
         <input type="text" id="squareLabelInput" placeholder="Подпись" maxlength="60">
@@ -1016,6 +1034,9 @@
       <textarea id="appealText" maxlength="1000" placeholder="Текст обращения…"></textarea>
       <div class="appeal-counter" id="appealCounter">0/1000</div>
       <div class="ed-msg" id="appealStatus"></div>
+      <div class="appeal-hint" id="appealCooldownHint"></div>
+      <div class="editor-label" style="margin-top:12px;">Мои обращения</div>
+      <div id="myAppeals"></div>
     </div>
     <div class="appeal-actions-row">
       <button type="button" id="appealCancelBtn">Отмена</button>
@@ -1087,7 +1108,10 @@
     const appealsRef = firebase.database().ref('appeals');
     let appealsData = {};
     let appealsLoaded = false;
-    let appealsSubscribed = false;
+    let appealsSubQuery = null;
+    let appealsSubHandler = null;
+    let appealsSubMode = null;
+    let appealsSubUid = null;
     let editorPanelOpen = false;
     // Элементы редактора объявлены заранее: applyCurrentPermissions может сработать
     // при первой загрузке раньше, чем выполнится блок "РЕДАКТОР" ниже.
@@ -1269,16 +1293,17 @@
       const TEST_ACCRUAL_ROLES = ['stadmin', 'stadm'];
       window.canEditSquareResult = !!(perms.owner || EDIT_ROLES.includes(roleKey) || EDIT_ROLES.includes(roleIdKey));
       // Тестовое начисление материалов — супер админ и stadmin.
+      window.canModerateAppeals = window.canEditSquareResult; // обращения: супер админ + adm/admin/stadm/stadmin
       window.canTestAccrual = !!(perms.owner || TEST_ACCRUAL_ROLES.includes(roleKey) || TEST_ACCRUAL_ROLES.includes(roleIdKey));
       if (!perms.manageSquares && typeof setSquareModeActive === 'function') setSquareModeActive(false);
-      if (!perms.manageRoles && typeof closeAdminPanel === 'function') closeAdminPanel();
+      if (!perms.manageRoles && !window.canModerateAppeals && typeof closeAdminPanel === 'function') closeAdminPanel();
       const canEditorAny = !!(perms.manageSquares || perms.manageRoles || perms.owner);
       if (addSquareBtnEl) addSquareBtnEl.classList.toggle('hidden-btn', !canEditorAny);
       if (!canEditorAny && typeof closeEditorPanel === 'function') closeEditorPanel();
-      const appealBtnEl0 = document.getElementById('appealBtn');
-      if (appealBtnEl0) appealBtnEl0.classList.toggle('hidden-btn', !currentUser);
+      const appealBox0 = document.getElementById('appealTopBox');
+      if (appealBox0) appealBox0.style.display = currentUser ? '' : 'none';
       const gearBtn = authWidgetEl && authWidgetEl.querySelector('#adminGearBtn');
-      if (gearBtn) gearBtn.style.display = perms.manageRoles ? 'flex' : 'none';
+      if (gearBtn) gearBtn.style.display = (perms.manageRoles || window.canModerateAppeals) ? 'flex' : 'none';
       const safe = (fn) => { try { fn(); } catch (e) { console.error(e); } };
       safe(() => updateRoleBadge(perms));
       safe(() => { if (currentUser && isOwnerId(currentUser.id) && typeof seedDefaultLeaderRoles === 'function') seedDefaultLeaderRoles(); });
@@ -1366,12 +1391,17 @@
     });
 
     function openAdminPanel() {
-      if (!window.canManageRoles) return;
+      const full = !!window.canManageRoles;
+      if (!full && !window.canModerateAppeals) return;
       adminPanelOpen = true;
-      subscribeAdminLogs();
-      renderAdminPanelContent();
+      // ст адм / адм без права на роли видят в панели только вкладку "Обращения".
+      adminPanelEl.querySelectorAll('.admin-tab-btn').forEach((b) => {
+        b.style.display = (full || b.dataset.adminTab === 'appeals') ? '' : 'none';
+      });
+      if (full) { subscribeAdminLogs(); renderAdminPanelContent(); }
       adminPanelEl.classList.add('visible');
       adminPanelBackdropEl.classList.add('visible');
+      if (!full) { const t = adminPanelEl.querySelector('[data-admin-tab="appeals"]'); if (t) t.click(); }
     }
     function closeAdminPanel() {
       adminPanelOpen = false;
@@ -2089,36 +2119,35 @@
         defenseEl.classList.toggle('full', used >= perms.defensesPerDay);
         defenseEl.classList.remove('hidden'); any = true;
       } else defenseEl.classList.add('hidden');
+      // Таймеры КД — отдельные плашки, только пока КД реально идёт (после нападения).
       cdEl.classList.add('hidden'); defCdEl.classList.add('hidden');
       if (currentUser && perms.faction) {
         try {
-          // часы — КД атаки фракции (00:12:19), всегда видны у роли с фракцией
-          setTxt(cdEl, fmtHMS(fcRemaining(perms.faction, 'attack')));
-          cdEl.classList.remove('hidden'); any = true;
-          // синие часы — КД защиты (самый долгий у квадратов фракции), только пока идёт
+          const rem = fcRemaining(perms.faction, 'attack');
+          if (rem > 0) { setTxt(cdEl, fmtHMS(rem)); cdEl.classList.remove('hidden'); any = true; }
           let dmax = 0;
           factionSquares(perms.faction).forEach((id) => {
             const st = squareAttackState(squareData[id]);
             if (st && st.state === 'cooldown') dmax = Math.max(dmax, st.remaining);
           });
-          if (dmax > 0) { setTxt(defCdEl, fmtHMS(dmax)); defCdEl.classList.remove('hidden'); }
+          if (dmax > 0) { setTxt(defCdEl, fmtHMS(dmax)); defCdEl.classList.remove('hidden'); any = true; }
         } catch (e) {}
       }
       wrapEl.classList.toggle('hidden', !any);
       try { updateAttackBanners(); } catch (e) {}
     }
 
-    // "ВЫ НАПАЛИ" — всем ролям фракции-нападающей; "НА ВАС НАПАЛИ" — всем ролям
-    // фракции, чей квадрат атакуют. Отсчёт — до начала атаки (noticeUntil).
-    function bannerHtml(kind, text, rem) {
-      return `<div class="attack-banner ${kind}"><span class="ico">${kind === 'attack' ? ICONS.swords : ICONS.shield}</span><span class="txt">${text}</span><span class="sep"></span><span class="time"><span class="ico">${ICONS.clock}</span>${fmtHMS(rem)}</span></div>`;
+    // "ВЫ НАПАЛИ" (красная) — ролям фракции-нападающей; "НА ВАС НАПАЛИ" (оранжевая) —
+    // ролям фракции, чей квадрат атакуют. Без таймера: пока идёт подготовка атаки.
+    function bannerHtml(kind, text) {
+      return `<div class="attack-banner ${kind}"><span class="ico">${kind === 'attack' ? ICONS.swords : ICONS.shield}</span><span class="txt">${text}</span></div>`;
     }
     function updateAttackBanners() {
       const box = document.getElementById('attackBanners');
       if (!box) return;
       const perms = window.currentPerms || {};
       const f = perms.faction;
-      let atk = null, def = null;
+      let atk = false, def = false;
       if (currentUser && f) {
         const now = serverNow();
         Object.keys(squareData).forEach((id) => {
@@ -2126,15 +2155,14 @@
           if (!d) return;
           let until = d.noticeUntil || 0;
           if (!until) { const st = squareAttackState(d); if (st && st.state === 'pending') until = st.start; }
-          const rem = until - now;
-          if (rem <= 0) return;
-          if (d.attackerFaction === f) { if (atk === null || rem < atk) atk = rem; }
-          else if (d.faction === f) { if (def === null || rem < def) def = rem; }
+          if (until - now <= 0) return;
+          if (d.attackerFaction === f) atk = true;
+          else if (d.faction === f) def = true;
         });
       }
       let html = '';
-      if (atk !== null) html += bannerHtml('attack', 'ВЫ НАПАЛИ', atk);
-      if (def !== null) html += bannerHtml('defense', 'НА ВАС НАПАЛИ', def);
+      if (atk) html += bannerHtml('attack', 'ВЫ НАПАЛИ');
+      if (def) html += bannerHtml('defense', 'НА ВАС НАПАЛИ');
       if (box._last !== html) { box.innerHTML = html; box._last = html; }
     }
 
@@ -2193,7 +2221,7 @@
       combatStatusBadgeEl.innerHTML = `
         <span class="combat-badge attack hidden" id="combatAttackBadge" title="Атак сегодня"><span class="ico">${ICONS.swords}</span><b>0/0</b></span>
         <span class="combat-badge defense hidden" id="combatDefenseBadge" title="Получено защиты сегодня"><span class="ico">${ICONS.shield}</span><b>0/0</b></span>
-        <span class="combat-badge cd hidden" id="combatCdBadge" title="КД атаки вашей фракции"><span class="ico">${ICONS.clock}</span><b>00:00:00</b></span>
+        <span class="combat-badge cd hidden" id="combatCdBadge" title="КД атаки вашей фракции (идёт после нападения)"><span class="ico">${ICONS.clock}</span><b>00:00:00</b></span>
         <span class="combat-badge cd def hidden" id="combatDefCdBadge" title="КД защиты ваших квадратов"><span class="ico">${ICONS.clock}</span><b>00:00:00</b></span>
       `;
       L.DomEvent.disableClickPropagation(combatStatusBadgeEl);
@@ -2213,6 +2241,18 @@
     };
     switcher.addTo(map);
 
+    // Кнопка "Обращение" — сверху справа (под переключателем слоёв), видна вошедшим игрокам.
+    const appealTopControl = L.control({ position: 'topright' });
+    appealTopControl.onAdd = function () {
+      const div = L.DomUtil.create('div', 'layer-switcher appeal-top');
+      div.id = 'appealTopBox';
+      div.style.display = currentUser ? '' : 'none';
+      div.innerHTML = '<button id="appealBtn">✉ Обращение</button>';
+      L.DomEvent.disableClickPropagation(div);
+      return div;
+    };
+    appealTopControl.addTo(map);
+
     // Единое меню внизу слева: кнопка "Квадрат" (видна только тем, у кого
     // есть право редактирования квадратов) и "История сражений" (видна всем).
     // Контейнер — гибкий flex-ряд, поэтому при появлении/скрытии кнопки
@@ -2222,7 +2262,7 @@
     bottomLeftMenu.onAdd = function () {
       const div = L.DomUtil.create('div', 'bottom-left-stack');
       div.innerHTML = `
-        <div class="bottom-left-menu"><button id="statsBtn">📊 Статистика</button><button id="appealBtn" class="hidden-btn">✉ Обращение</button></div>
+        <div class="bottom-left-menu"><button id="statsBtn">📊 Статистика</button></div>
         <div class="bottom-left-menu">
           <button id="addSquareBtn" class="hidden-btn">✏️ Редактор</button>
           <button id="battleHistoryBtn">📜 История сражений<span class="history-badge hidden" id="historyBadge">0</span></button>
@@ -2387,21 +2427,52 @@
     }
 
     // ---- Обращения ----
+    const APPEAL_COOLDOWN_MS = 10 * 60 * 1000; // КД между обращениями одного игрока
     const appealModalEl = document.getElementById('appealModal');
     const appealBackdropEl = document.getElementById('appealBackdrop');
     const appealTextEl = document.getElementById('appealText');
     const appealStatusEl = document.getElementById('appealStatus');
     const appealSendBtnEl = document.getElementById('appealSendBtn');
-    let lastAppealAt = 0;
+    const appealReplyOpen = {};
+    const appealReplyDraft = {};
+
+    function appealCooldownLeft() {
+      if (!currentUser || isOwnerId(currentUser.id)) return 0; // супер админа КД не касается
+      let last = 0;
+      try { last = Number(localStorage.getItem('appeal_last_' + currentUser.id)) || 0; } catch (e) {}
+      Object.keys(appealsData).forEach((k) => {
+        const a = appealsData[k];
+        if (a && a.userId === currentUser.id && a.ts > last) last = a.ts;
+      });
+      return Math.max(0, last + APPEAL_COOLDOWN_MS - serverNow());
+    }
+    function updateAppealCooldownUI() {
+      if (!appealModalEl.classList.contains('visible')) return;
+      const left = appealCooldownLeft();
+      const hint = document.getElementById('appealCooldownHint');
+      if (left > 0) {
+        appealSendBtnEl.disabled = true;
+        appealSendBtnEl.textContent = 'КД ' + formatMMSS(left);
+        hint.textContent = 'Следующее обращение можно отправить через ' + formatMMSS(left) + '.';
+      } else {
+        if (!appealSendBtnEl._sending) appealSendBtnEl.disabled = false;
+        appealSendBtnEl.textContent = 'Отправить';
+        hint.textContent = '';
+      }
+    }
+    setInterval(updateAppealCooldownUI, 1000);
 
     function openAppealModal() {
       if (!currentUser) return;
       appealTextEl.value = '';
       document.getElementById('appealCounter').textContent = '0/1000';
       appealStatusEl.textContent = ''; appealStatusEl.className = 'ed-msg';
-      appealSendBtnEl.disabled = false;
+      appealSendBtnEl._sending = false;
       appealModalEl.classList.add('visible');
       appealBackdropEl.classList.add('visible');
+      renderMyAppeals();
+      markRepliesSeen();
+      updateAppealCooldownUI();
       setTimeout(() => appealTextEl.focus(), 50);
     }
     function closeAppealModal() {
@@ -2418,8 +2489,10 @@
       if (!currentUser) return;
       const text = appealTextEl.value.trim();
       if (text.length < 5) { appealStatus('Напишите текст обращения (минимум 5 символов).', true); return; }
-      if (Date.now() - lastAppealAt < 30000) { appealStatus('Подождите немного перед отправкой следующего обращения.', true); return; }
+      const left = appealCooldownLeft();
+      if (left > 0) { appealStatus('КД обращений: подождите ' + formatMMSS(left) + '.', true); return; }
       const perms = window.currentPerms || {};
+      appealSendBtnEl._sending = true;
       appealSendBtnEl.disabled = true;
       appealsRef.push({
         ts: firebase.database.ServerValue.TIMESTAMP,
@@ -2430,16 +2503,66 @@
         text: text.slice(0, 1000),
         status: 'new'
       }).then(() => {
-        lastAppealAt = Date.now();
+        try { localStorage.setItem('appeal_last_' + currentUser.id, String(serverNow())); } catch (e) {}
+        appealSendBtnEl._sending = false;
         appealStatus('Обращение отправлено ✔');
+        appealTextEl.value = '';
+        document.getElementById('appealCounter').textContent = '0/1000';
         logAction('Создал обращение');
-        setTimeout(closeAppealModal, 900);
+        renderMyAppeals();
+        updateAppealCooldownUI();
       }).catch((err) => {
-        appealSendBtnEl.disabled = false;
+        appealSendBtnEl._sending = false;
+        updateAppealCooldownUI();
         appealStatus('Не удалось отправить: ' + ((err && err.message) || err) + '. Проверьте правила Firebase для узла "appeals".', true);
       });
     };
 
+    // ---- "Мои обращения" + уведомление игрока об ответе ----
+    function myAppealsList(limit) {
+      if (!currentUser) return [];
+      const list = Object.keys(appealsData).filter((k) => appealsData[k] && appealsData[k].userId === currentUser.id)
+        .sort((a, b) => (appealsData[b].ts || 0) - (appealsData[a].ts || 0))
+        .map((k) => Object.assign({ id: k }, appealsData[k]));
+      return limit ? list.slice(0, limit) : list;
+    }
+    function replyBlockHtml(r) {
+      return `<div class="appeal-reply"><div class="appeal-reply-head">💬 Ответил ${escapeHtml(r.byName || 'администратор')}<span class="appeal-meta">${escapeHtml(r.byRole || '')}${r.ts ? ' · ' + escapeHtml(formatTimestamp(r.ts)) : ''}</span></div><div class="appeal-text">${escapeHtml(r.text || '')}</div></div>`;
+    }
+    function renderMyAppeals() {
+      const el = document.getElementById('myAppeals');
+      if (!el) return;
+      const list = myAppealsList(5);
+      el.innerHTML = list.length ? list.map((a) => `<div class="appeal-item ${a.reply ? 'done' : 'new'}">
+          <div class="appeal-time">${escapeHtml(formatTimestamp(a.ts))}</div>
+          <div class="appeal-text">${escapeHtml(a.text || '')}</div>
+          ${a.reply ? replyBlockHtml(a.reply) : '<div class="appeal-time" style="margin-top:6px;">Ожидает ответа…</div>'}
+        </div>`).join('') : '<div class="admin-empty-hint">Вы ещё не отправляли обращений.</div>';
+    }
+    function getSeenReplies() { try { return JSON.parse(localStorage.getItem('appeal_replies_seen') || '{}'); } catch (e) { return {}; } }
+    function setSeenReplies(o) { try { localStorage.setItem('appeal_replies_seen', JSON.stringify(o)); } catch (e) {} }
+    function markRepliesSeen() {
+      const seen = getSeenReplies();
+      myAppealsList().forEach((a) => { if (a.reply) seen[a.id + ':' + (a.reply.ts || 0)] = 1; });
+      setSeenReplies(seen);
+    }
+    function checkReplyNotifications() {
+      const seen = getSeenReplies();
+      let changed = false;
+      myAppealsList().forEach((a) => {
+        if (!a.reply) return;
+        const key = a.id + ':' + (a.reply.ts || 0);
+        if (seen[key]) return;
+        seen[key] = 1; changed = true;
+        if (!appealModalEl.classList.contains('visible')) {
+          showToast('💬 Ответ на ваше обращение', (a.reply.byName || 'Администратор') + ': ' + String(a.reply.text || '').slice(0, 160), openAppealModal);
+          beep();
+        }
+      });
+      if (changed) setSeenReplies(seen);
+    }
+
+    // ---- Уведомления модераторам ----
     function notifyNewAppeal(a) {
       const who = a.userName || 'Игрок';
       const snippet = String(a.text || '').slice(0, 160);
@@ -2455,7 +2578,8 @@
       if (tabBtn) tabBtn.click();
     }
     function updateAppealsBadge() {
-      const n = Object.keys(appealsData).filter((k) => appealsData[k] && appealsData[k].status !== 'done').length;
+      const n = window.canModerateAppeals
+        ? Object.keys(appealsData).filter((k) => appealsData[k] && appealsData[k].status === 'new').length : 0;
       const gear = authWidgetEl && authWidgetEl.querySelector('#adminGearBtn');
       if (gear) {
         let dot = gear.querySelector('.gear-dot');
@@ -2466,46 +2590,111 @@
       const tab = document.getElementById('appealsTabCount');
       if (tab) tab.textContent = n ? ` (${n})` : '';
     }
-    // Обращения читает только супер админ — подписка запускается при его входе.
+
+    // Модераторы (супер админ, adm, admin, stadm, stadmin) читают все обращения,
+    // остальные игроки — только свои (для "Мои обращения" и уведомления об ответе).
+    function detachAppeals() {
+      if (appealsSubQuery && appealsSubHandler) appealsSubQuery.off('value', appealsSubHandler);
+      appealsSubQuery = null; appealsSubHandler = null; appealsSubMode = null; appealsSubUid = null;
+      appealsData = {}; appealsLoaded = false;
+    }
     function syncAppealsSubscription() {
-      if (!currentUser || !isOwnerId(currentUser.id) || appealsSubscribed) return;
-      appealsSubscribed = true;
-      appealsRef.on('value', (snap) => {
+      if (!currentUser) { if (appealsSubQuery) detachAppeals(); return; }
+      const mode = window.canModerateAppeals ? 'all' : 'mine';
+      if (appealsSubMode === mode && appealsSubUid === currentUser.id) return;
+      detachAppeals();
+      appealsSubMode = mode; appealsSubUid = currentUser.id;
+      appealsSubQuery = mode === 'all' ? appealsRef : appealsRef.orderByChild('userId').equalTo(currentUser.id);
+      appealsSubHandler = appealsSubQuery.on('value', (snap) => {
         const next = snap.val() || {};
-        if (appealsLoaded) {
+        if (mode === 'all' && appealsLoaded) {
           Object.keys(next).forEach((k) => {
-            if (!appealsData[k] && next[k] && next[k].status !== 'done') notifyNewAppeal(next[k]);
+            const a = next[k];
+            if (!appealsData[k] && a && a.status === 'new' && a.userId !== currentUser.id) notifyNewAppeal(a);
           });
         }
         appealsData = next;
         appealsLoaded = true;
         updateAppealsBadge();
+        checkReplyNotifications();
+        renderMyAppeals();
         if (adminPanelOpen) renderAppeals();
-      }, (err) => { appealsSubscribed = false; showAdminError(err); });
-      if ('Notification' in window && Notification.permission === 'default') {
+      }, (err) => { console.error(err); detachAppeals(); if (mode === 'all') showAdminError(err); });
+      if (mode === 'all' && 'Notification' in window && Notification.permission === 'default') {
         const ask = () => { document.removeEventListener('click', ask); try { Notification.requestPermission(); } catch (e) {} };
         document.addEventListener('click', ask);
       }
     }
+
     function renderAppeals() {
       const listEl = document.getElementById('appealsList');
       if (!listEl) return;
+      if (!window.canModerateAppeals) { listEl.innerHTML = ''; return; }
       const keys = Object.keys(appealsData).filter((k) => appealsData[k])
         .sort((a, b) => (appealsData[b].ts || 0) - (appealsData[a].ts || 0));
       if (!keys.length) { listEl.innerHTML = '<div class="admin-empty-hint">Обращений пока нет.</div>'; return; }
       listEl.innerHTML = keys.map((k) => {
         const a = appealsData[k];
         const done = a.status === 'done';
+        const ek = escapeHtml(k);
+        const draft = appealReplyDraft[k] != null ? appealReplyDraft[k] : '';
         return `<div class="appeal-item ${done ? 'done' : 'new'}">
           <div class="appeal-head"><b>${escapeHtml(a.userName || '—')}</b><span class="appeal-meta">${escapeHtml(a.role || 'без роли')}${a.faction ? ' · ' + escapeHtml(a.faction) : ''} · ID ${escapeHtml(a.userId || '')}</span></div>
-          <div class="appeal-time">${escapeHtml(formatTimestamp(a.ts))}${done ? ' · решено' : ''}</div>
+          <div class="appeal-time">${escapeHtml(formatTimestamp(a.ts))}${a.reply ? ' · отвечено' : (done ? ' · решено' : '')}</div>
           <div class="appeal-text">${escapeHtml(a.text || '')}</div>
+          ${a.reply ? replyBlockHtml(a.reply) : ''}
           <div class="appeal-actions">
-            <button type="button" data-appeal-toggle="${escapeHtml(k)}">${done ? '↺ Вернуть' : '✔ Решено'}</button>
-            <button type="button" data-appeal-del="${escapeHtml(k)}">🗑 Удалить</button>
+            <button type="button" data-appeal-reply="${ek}">💬 ${a.reply ? 'Изменить ответ' : 'Ответить'}</button>
+            <button type="button" data-appeal-toggle="${ek}">${done ? '↺ Вернуть' : '✔ Решено'}</button>
+            <button type="button" data-appeal-del="${ek}">🗑 Удалить</button>
+          </div>
+          <div class="appeal-reply-form" data-reply-form="${ek}" style="display:${appealReplyOpen[k] ? 'block' : 'none'};">
+            <textarea data-appeal-text="${ek}" maxlength="1000" placeholder="Текст ответа…">${escapeHtml(draft)}</textarea>
+            <button type="button" data-appeal-send="${ek}">Отправить ответ</button>
           </div>
         </div>`;
       }).join('');
+      const byAttr = (attr, k) => listEl.querySelector(`[${attr}="${k}"]`);
+      listEl.querySelectorAll('[data-appeal-reply]').forEach((btn) => {
+        btn.onclick = () => {
+          const k = btn.dataset.appealReply;
+          appealReplyOpen[k] = !appealReplyOpen[k];
+          const form = byAttr('data-reply-form', k);
+          const ta = byAttr('data-appeal-text', k);
+          if (appealReplyOpen[k] && ta && !ta.value && appealsData[k] && appealsData[k].reply) {
+            ta.value = appealsData[k].reply.text || ''; appealReplyDraft[k] = ta.value;
+          }
+          if (form) form.style.display = appealReplyOpen[k] ? 'block' : 'none';
+          if (appealReplyOpen[k] && ta) ta.focus();
+        };
+      });
+      listEl.querySelectorAll('[data-appeal-text]').forEach((ta) => {
+        ta.oninput = () => { appealReplyDraft[ta.dataset.appealText] = ta.value; };
+      });
+      listEl.querySelectorAll('[data-appeal-send]').forEach((btn) => {
+        btn.onclick = () => {
+          const k = btn.dataset.appealSend;
+          const ta = byAttr('data-appeal-text', k);
+          const text = ta ? ta.value.trim() : '';
+          if (text.length < 2) { showAdminError('Введите текст ответа'); return; }
+          const perms = window.currentPerms || {};
+          btn.disabled = true;
+          appealsRef.child(k).update({
+            reply: {
+              text: text.slice(0, 1000),
+              byId: currentUser.id,
+              byName: currentUser.global_name || currentUser.username || currentUser.id,
+              byRole: perms.owner ? 'Супер админ' : (perms.roleName || 'Админ'),
+              ts: firebase.database.ServerValue.TIMESTAMP
+            },
+            status: 'done'
+          }).then(() => {
+            const who = appealsData[k] && appealsData[k].userName;
+            delete appealReplyOpen[k]; delete appealReplyDraft[k];
+            logAction('Ответил на обращение', who ? `игрока ${who}` : null);
+          }).catch((err) => { btn.disabled = false; showAdminError(err); });
+        };
+      });
       listEl.querySelectorAll('[data-appeal-toggle]').forEach((btn) => {
         btn.onclick = () => {
           const k = btn.dataset.appealToggle;
@@ -2527,6 +2716,7 @@
       if (Object.keys(upd).length) appealsRef.update(upd).catch(showAdminError);
     };
     document.getElementById('appealBtn').onclick = () => openAppealModal();
+    try { syncAppealsSubscription(); } catch (e) {}
     try { refreshEditorPanel(); } catch (e) {}
     try { updateAppealsBadge(); } catch (e) {}
 
@@ -2872,6 +3062,7 @@
     // --- Редактор (добавление/изменение/удаление квадрата) ---
     let editingSquareId = null;
     let editingSquareLatLng = null;
+    let ghostSquareMarker = null;
     const editorEl = document.getElementById('squareEditor');
     const labelInput = document.getElementById('squareLabelInput');
     const colorInput = document.getElementById('squareColorInput');
@@ -2918,21 +3109,70 @@
     }
 
     function updatePreview() {
+      updateRangeLabels();
       const size = Number(sizeInput.value);
       const alpha = Number(opacityInput.value) / 100;
+      // Предпросмотр автоматически вписывается в окошко (большие квадраты уменьшаются).
+      const scale = size > 100 ? 100 / size : 1;
+      previewEl.style.flex = 'none';
       previewEl.style.width = size + 'px';
       previewEl.style.height = size + 'px';
+      previewEl.style.transform = scale < 1 ? `scale(${scale})` : '';
       previewEl.style.borderRadius = Math.max(3, Math.round(size * 0.12)) + 'px';
       previewEl.style.background = hexToRgba(colorInput.value, alpha);
       previewEl.style.border = `${borderWidthInput.value}px solid ${borderColorInput.value}`;
       const key = typeInput.value || factionInput.value;
       const px = Math.round(size * 0.52);
       previewEl.innerHTML = (key && px >= 8) ? `<span class="square-center-icon">${iconSvg(key, px)}</span>` : '';
+      const noteEl = document.getElementById('squarePreviewNote');
+      if (noteEl) {
+        const onMap = Math.max(6, Math.round(size * currentZoomScale()));
+        noteEl.textContent = `На карте сейчас: ${onMap}px` + (scale < 1 ? ` · предпросмотр уменьшен до ${Math.round(scale * 100)}%` : '');
+      }
+      if (editorEl.classList.contains('visible')) liveMapPreview();
     }
+
+    // Live-предпросмотр прямо на карте: пока открыт редактор, меняющийся квадрат
+    // сразу выглядит на карте так, как будет после "Сохранить" (отмена — вернёт как было).
+    function draftSquareData() {
+      const base = editingSquareId ? (squareData[editingSquareId] || {}) : {};
+      return Object.assign({}, base, {
+        label: labelInput.value.trim(), color: colorInput.value, borderColor: borderColorInput.value,
+        borderWidth: Number(borderWidthInput.value), size: Number(sizeInput.value),
+        opacity: Number(opacityInput.value) / 100, faction: factionInput.value || null, type: typeInput.value || null
+      });
+    }
+    function liveMapPreview() {
+      const d = draftSquareData();
+      if (editingSquareId) {
+        const m = squareMarkers[editingSquareId];
+        if (m && !m._localDragging) m.setIcon(squareIcon(d, editingSquareId));
+      } else if (editingSquareLatLng) {
+        if (!ghostSquareMarker) {
+          ghostSquareMarker = L.marker(editingSquareLatLng, { icon: squareIcon(d, '__new'), interactive: false, keyboard: false }).addTo(map);
+        } else {
+          ghostSquareMarker.setLatLng(editingSquareLatLng);
+          ghostSquareMarker.setIcon(squareIcon(d, '__new'));
+        }
+      }
+    }
+    function clearLiveMapPreview() {
+      if (ghostSquareMarker) { map.removeLayer(ghostSquareMarker); ghostSquareMarker = null; }
+      const id = editingSquareId;
+      if (id && squareMarkers[id] && squareData[id] && !squareMarkers[id]._localDragging) {
+        squareMarkers[id].setIcon(squareIcon(squareData[id], id));
+      }
+    }
+    // Ползунки, цвета и подпись обновляют предпросмотр и карту "на лету".
+    [labelInput, colorInput, borderColorInput, borderWidthInput, sizeInput, opacityInput].forEach((el) => {
+      el.addEventListener('input', updatePreview);
+      el.addEventListener('change', updatePreview);
+    });
 
     const editorTitleEl = document.getElementById('squareEditorTitle');
 
     function openSquareEditor(id, latlng, data) {
+      clearLiveMapPreview();
       editingSquareId = id;
       editingSquareLatLng = latlng;
       data = data || {};
@@ -2953,10 +3193,12 @@
       deleteBtn.classList.toggle('hidden', !id || !window.canDeleteSquares);
       editorTitleEl.textContent = id ? 'Редактирование квадрата' : 'Новый квадрат';
       editorEl.classList.add('visible');
+      liveMapPreview();
       labelInput.focus();
     }
 
     function closeSquareEditor() {
+      clearLiveMapPreview();
       editorEl.classList.remove('visible');
       editingSquareId = null;
       editingSquareLatLng = null;
