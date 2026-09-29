@@ -94,21 +94,134 @@
        Это отдельная плашка (со своим фоном), а не просто текст рядом с именем. */
     .leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; flex-wrap: wrap; }
     .combat-status-badge {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(18,18,18,.9);
+      display: flex; align-items: center; gap: 16px;
+      background: #fff; color: #1b1b1f;
       box-shadow: 0 4px 18px rgba(0,0,0,.35);
-      border-radius: 12px; padding: 8px 12px;
+      border-radius: 14px; padding: 9px 16px;
     }
     .combat-status-badge.hidden { display: none; }
     .combat-badge {
-      display: flex; align-items: center; gap: 3px;
-      font-size: 12px; font-weight: 700; color: #ddd; white-space: nowrap;
+      display: flex; align-items: center; gap: 7px;
+      font-size: 15px; font-weight: 700; color: #1b1b1f; white-space: nowrap;
+      font-variant-numeric: tabular-nums;
     }
-    .combat-badge.attack { color: #ff8a8a; }
-    .combat-badge.defense { color: #8ac8ff; }
+    .combat-badge .ico { display: flex; width: 18px; height: 18px; color: #ef5a22; --hand: #fff; }
+    .combat-badge .ico svg { width: 100%; height: 100%; display: block; }
     .combat-badge.hidden { display: none; }
-    .combat-badge.cd { color: #ffd9a8; font-variant-numeric: tabular-nums; }
-    .combat-badge.full { color: #ff5252; }
+    .combat-badge.cd.def .ico { color: #2f7bd8; }
+    .combat-badge.full b { color: #e0342b; }
+
+    /* Плашки "ВЫ НАПАЛИ" / "НА ВАС НАПАЛИ" — видят все роли фракции */
+    .attack-banners {
+      position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      z-index: 1200; pointer-events: none;
+    }
+    @media (max-width: 900px) { .attack-banners { top: 64px; } }
+    .attack-banner {
+      display: flex; align-items: center; gap: 12px;
+      background: linear-gradient(180deg, #ff6d2e, #f0521a);
+      color: #fff; border-radius: 14px; padding: 10px 18px;
+      font-weight: 800; font-size: 15px; letter-spacing: .3px; text-transform: uppercase;
+      box-shadow: 0 6px 22px rgba(240,82,26,.45); white-space: nowrap;
+    }
+    .attack-banner .ico { display: flex; width: 20px; height: 20px; color: #fff; --hand: #f0521a; }
+    .attack-banner .ico svg { width: 100%; height: 100%; display: block; }
+    .attack-banner .sep { width: 1px; height: 22px; background: rgba(255,255,255,.5); }
+    .attack-banner .time { display: flex; align-items: center; gap: 7px; font-variant-numeric: tabular-nums; }
+
+    /* Панель "Редактор" */
+    .editor-panel {
+      display: none; position: fixed; left: 10px; bottom: 112px; z-index: 1300;
+      width: 310px; max-width: calc(100vw - 20px);
+      background: linear-gradient(180deg, rgba(28,28,30,.98), rgba(18,18,20,.98));
+      border: 1px solid rgba(255,255,255,.08); border-radius: 16px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.6); color: #ddd;
+    }
+    .editor-panel.visible { display: block; }
+    .editor-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 14px; font-weight: 600; color: #fff;
+    }
+    .editor-head button { border: 0; background: transparent; color: #aaa; cursor: pointer; font-size: 16px; }
+    .editor-body { padding: 12px 14px 14px; max-height: 65vh; overflow-y: auto; }
+    .editor-label { font-size: 11px; color: #8d8d92; margin: 0 0 4px; text-transform: uppercase; letter-spacing: .4px; }
+    .editor-body select {
+      width: 100%; box-sizing: border-box; background: #26262a; color: #ddd;
+      border: 1px solid #3a3a3e; border-radius: 8px; padding: 8px; font-size: 13px; margin-bottom: 10px;
+    }
+    .editor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+    .editor-grid button, .editor-row-btns button {
+      border: 0; border-radius: 10px; padding: 10px 8px; cursor: pointer;
+      background: #2b2b30; color: #e6e6e6; font-size: 12.5px; font-weight: 600;
+      transition: background .15s ease;
+    }
+    .editor-grid button:hover, .editor-row-btns button:hover { background: #3a3a42; }
+    .editor-grid button.wide { grid-column: 1 / -1; }
+    .editor-grid button.active { background: #5865F2; color: #fff; }
+    .editor-grid button.accent { background: #f0521a; color: #fff; }
+    .editor-grid button.accent:hover { background: #d94711; }
+    .editor-section { border-top: 1px solid rgba(255,255,255,.08); padding-top: 10px; margin-top: 4px; }
+    .editor-row-btns { display: flex; gap: 6px; }
+    .editor-row-btns button { flex: 1; }
+    .editor-current { font-size: 12px; color: #b9b9be; margin-bottom: 8px; }
+    .ed-msg { min-height: 16px; margin-top: 8px; font-size: 12px; }
+    .ed-msg.ok { color: #7fd99a; }
+    .ed-msg.err { color: #ff8a8a; }
+
+    /* Уведомления */
+    .toast-box {
+      position: fixed; right: 12px; bottom: 56px; z-index: 1600;
+      display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+    }
+    .toast {
+      width: 300px; max-width: calc(100vw - 24px); box-sizing: border-box; cursor: pointer;
+      background: rgba(24,24,27,.98); border: 1px solid rgba(255,255,255,.1);
+      border-left: 4px solid #f0521a; border-radius: 12px; padding: 10px 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.5); color: #ddd;
+    }
+    .toast-title { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+    .toast-body { font-size: 12px; color: #bbb; white-space: pre-wrap; word-break: break-word; max-height: 72px; overflow: hidden; }
+    .auth-widget .gear-btn { position: relative; }
+    .gear-dot {
+      position: absolute; top: -5px; right: -5px; min-width: 16px; height: 16px; padding: 0 4px;
+      box-sizing: border-box; border-radius: 8px; background: #f0521a; color: #fff;
+      font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center;
+    }
+
+    /* Обращения */
+    .appeal-modal { width: 420px; }
+    .appeal-modal textarea {
+      width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical;
+      background: #26262a; color: #ddd; border: 1px solid #3a3a3e; border-radius: 10px;
+      padding: 10px; font: inherit; font-size: 13px;
+    }
+    .appeal-hint { font-size: 12px; color: #9a9a9f; margin-bottom: 8px; }
+    .appeal-counter { text-align: right; font-size: 11px; color: #777; margin-top: 4px; }
+    .appeal-actions-row { display: flex; gap: 8px; padding: 0 14px 14px; }
+    .appeal-actions-row button {
+      flex: 1; border: 0; border-radius: 10px; padding: 10px; cursor: pointer;
+      background: #2b2b30; color: #ddd; font-size: 13px; font-weight: 600;
+    }
+    .appeal-actions-row button.primary { background: #f0521a; color: #fff; }
+    .appeal-actions-row button:disabled { opacity: .5; cursor: default; }
+    .appeal-item {
+      background: #1f1f23; border: 1px solid #2f2f35; border-left: 3px solid #f0521a;
+      border-radius: 10px; padding: 10px; margin-bottom: 8px;
+    }
+    .appeal-item.done { border-left-color: #3b7d4f; opacity: .7; }
+    .appeal-head { font-size: 13px; color: #fff; }
+    .appeal-meta { font-size: 11px; color: #8d8d92; margin-left: 4px; }
+    .appeal-time { font-size: 11px; color: #777; margin: 2px 0 6px; }
+    .appeal-text { font-size: 13px; color: #ddd; white-space: pre-wrap; word-break: break-word; }
+    .appeal-actions { display: flex; gap: 6px; margin-top: 8px; }
+    .appeal-actions button {
+      border: 0; border-radius: 8px; padding: 6px 10px; cursor: pointer;
+      background: #2b2b30; color: #ddd; font-size: 12px;
+    }
+    .appeal-actions button:hover { background: #3a3a42; }
+    .admin-tabs { flex-wrap: wrap; }
 
     .map-square {
       border-radius: 4px;
@@ -784,6 +897,7 @@
       <div class="admin-tabs">
         <button type="button" class="admin-tab-btn active" data-admin-tab="roles">👥 Роли</button>
         <button type="button" class="admin-tab-btn" data-admin-tab="combat">⚔ Атака и защита</button>
+        <button type="button" class="admin-tab-btn" data-admin-tab="appeals">✉ Обращения<span id="appealsTabCount"></span></button>
         <button type="button" class="admin-tab-btn" data-admin-tab="logs">📋 Логи</button>
       </div>
 
@@ -841,7 +955,71 @@
         </div>
       </div>
 
+      <div class="admin-tab-panel" id="adminTabAppeals">
+        <div class="admin-section">
+          <div class="admin-section-title">✉ Обращения игроков</div>
+          <div class="combat-global-actions" style="margin-top:0;margin-bottom:8px;">
+            <button type="button" id="appealsDoneAllBtn">✔ Всё решено</button>
+            <button type="button" id="appealsClearDoneBtn">🧹 Удалить решённые</button>
+          </div>
+          <div id="appealsList"></div>
+        </div>
+      </div>
+
       <div id="adminPanelError" class="admin-panel-error" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div id="attackBanners" class="attack-banners"></div>
+  <div id="toastBox" class="toast-box"></div>
+
+  <div id="editorPanel" class="editor-panel">
+    <div class="editor-head"><span>✏️ Редактор</span><button type="button" id="editorCloseBtn" aria-label="Закрыть">✕</button></div>
+    <div class="editor-body">
+      <div id="edCombatSection">
+        <div class="editor-label">Фракция</div>
+        <select id="edFaction"></select>
+      </div>
+      <div class="editor-grid">
+        <button type="button" id="edSquareBtn" class="wide">➕ Квадрат</button>
+        <span id="edCombatBtns" style="display:contents;">
+          <button type="button" data-ed="atk+">⚔ Добавить атаку</button>
+          <button type="button" data-ed="atk-">⚔ Убрать атаку</button>
+          <button type="button" data-ed="def+">🛡 Добавить защиту</button>
+          <button type="button" data-ed="def-">🛡 Убрать защиту</button>
+          <button type="button" data-ed="cdatk">⏱ Сбросить КД атаки</button>
+          <button type="button" data-ed="cddef">⏱ Сбросить КД защиты</button>
+        </span>
+        <button type="button" id="edAppealBtn" class="wide accent">✉ Создать обращение</button>
+      </div>
+      <div id="edOwnerSection" class="editor-section">
+        <div class="editor-label">Временная роль лидера</div>
+        <div class="editor-current" id="edRoleCurrent"></div>
+        <select id="edRoleSelect"></select>
+        <div class="editor-row-btns">
+          <button type="button" id="edRoleTakeBtn">Взять роль</button>
+          <button type="button" id="edRoleDropBtn">Снять роль</button>
+        </div>
+      </div>
+      <div id="edMsg" class="ed-msg"></div>
+    </div>
+  </div>
+
+  <div id="appealBackdrop" class="modal-backdrop"></div>
+  <div id="appealModal" class="info-modal appeal-modal">
+    <div class="info-modal-header">
+      <span class="info-modal-title">✉ Создать обращение</span>
+      <button type="button" class="square-editor-close" id="appealCloseBtn" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="info-modal-body">
+      <div class="appeal-hint">Опишите вопрос или проблему — обращение увидит администрация.</div>
+      <textarea id="appealText" maxlength="1000" placeholder="Текст обращения…"></textarea>
+      <div class="appeal-counter" id="appealCounter">0/1000</div>
+      <div class="ed-msg" id="appealStatus"></div>
+    </div>
+    <div class="appeal-actions-row">
+      <button type="button" id="appealCancelBtn">Отмена</button>
+      <button type="button" id="appealSendBtn" class="primary">Отправить</button>
     </div>
   </div>
 
@@ -886,6 +1064,40 @@
     let roleUsageData = {};
     let currentUser = null;
 
+    // ---- Иконки HUD (как на скрине) ----
+    const ICONS = {
+      swords: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M4 4l13 13M20 4L7 17M15 19l4-4M9 19l-4-4"/></svg>',
+      shield: '<svg viewBox="0 0 24 24"><path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z" fill="currentColor"/></svg>',
+      clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M12 6.5V12l3.6 2.2" stroke="var(--hand,#fff)" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+    function fmtHMS(ms) {
+      const t = Math.max(0, Math.ceil(ms / 1000));
+      const p = (n) => String(n).padStart(2, '0');
+      return `${p(Math.floor(t / 3600))}:${p(Math.floor((t % 3600) / 60))}:${p(t % 60)}`;
+    }
+
+    // ---- Временная роль супер админа (хранится на этом устройстве) ----
+    const OWNER_ROLE_KEY = 'owner_acting_role';
+    let ownerActingRoleId = null;
+    try { ownerActingRoleId = localStorage.getItem(OWNER_ROLE_KEY) || null; } catch (e) {}
+
+    // ---- Обращения ----
+    // appeals/{id} = { ts, userId, userName, role, faction, text, status: 'new' | 'done' }
+    // В правилах Firebase Realtime Database нужно разрешить чтение/запись узла "appeals".
+    const appealsRef = firebase.database().ref('appeals');
+    let appealsData = {};
+    let appealsLoaded = false;
+    let appealsSubscribed = false;
+    let editorPanelOpen = false;
+    // Элементы редактора объявлены заранее: applyCurrentPermissions может сработать
+    // при первой загрузке раньше, чем выполнится блок "РЕДАКТОР" ниже.
+    const editorPanelEl = document.getElementById('editorPanel');
+    const edFactionSel = document.getElementById('edFaction');
+    const edRoleSel = document.getElementById('edRoleSelect');
+    const edMsgEl = document.getElementById('edMsg');
+    let edFactionInit = false;
+    let edRoleSig = null;
+
     // ---- Новые узлы Firebase (в правилах Realtime Database нужно разрешить
     // чтение/запись для "adminLogs", "factionCooldowns" и
     // "settings/deletedSpecialRoles", как и для остальных узлов) ----
@@ -908,7 +1120,7 @@
         ts: firebase.database.ServerValue.TIMESTAMP,
         userId: currentUser.id,
         userName: currentUser.global_name || currentUser.username || currentUser.id,
-        role: perms.owner ? 'Супер админ' : (perms.roleName || null),
+        role: perms.owner ? ('Супер админ' + (perms.acting ? ` (как ${perms.roleName})` : '')) : (perms.roleName || null),
         action,
         details: details || null
       }).catch(() => {});
@@ -1003,7 +1215,22 @@
 
     function getPermissions(user) {
       if (!user) return { manageSquares: false, deleteSquares: false, manageRoles: false, attackSquares: false, owner: false, roleId: null, roleName: null, roleColor: null, roleIcon: null, faction: null, rank: null, attacksPerDay: null, defensesPerDay: null };
-      if (isOwnerId(user.id)) return { manageSquares: true, deleteSquares: true, manageRoles: true, attackSquares: true, owner: true, roleId: null, roleName: null, roleColor: null, roleIcon: null, faction: null, rank: null, attacksPerDay: null, defensesPerDay: null };
+      if (isOwnerId(user.id)) {
+        const own = { manageSquares: true, deleteSquares: true, manageRoles: true, attackSquares: true, owner: true, roleId: null, roleName: null, roleColor: null, roleIcon: null, faction: null, rank: null, attacksPerDay: null, defensesPerDay: null, acting: false };
+        // Временная роль лидера: супер админ действует "от лица" выбранной роли
+        // (фракция, лимиты, КД, плашки), но все его права владельца сохраняются.
+        const ar = ownerActingRoleId && rolesData[ownerActingRoleId];
+        if (ar) {
+          Object.assign(own, {
+            roleId: ownerActingRoleId, roleName: ar.name || ownerActingRoleId, roleColor: ar.color || '#5865F2',
+            roleIcon: ar.icon || null, faction: ar.faction || null, rank: ar.rank || null,
+            attacksPerDay: ar.attacksPerDay != null ? Number(ar.attacksPerDay) : null,
+            defensesPerDay: ar.defensesPerDay != null ? Number(ar.defensesPerDay) : null,
+            acting: true
+          });
+        }
+        return own;
+      }
       const ur = userRolesData[user.id];
       const role = ur && rolesData[ur.roleId];
       return {
@@ -1045,7 +1272,11 @@
       window.canTestAccrual = !!(perms.owner || TEST_ACCRUAL_ROLES.includes(roleKey) || TEST_ACCRUAL_ROLES.includes(roleIdKey));
       if (!perms.manageSquares && typeof setSquareModeActive === 'function') setSquareModeActive(false);
       if (!perms.manageRoles && typeof closeAdminPanel === 'function') closeAdminPanel();
-      if (addSquareBtnEl) addSquareBtnEl.classList.toggle('hidden-btn', !perms.manageSquares);
+      const canEditorAny = !!(perms.manageSquares || perms.manageRoles || perms.owner);
+      if (addSquareBtnEl) addSquareBtnEl.classList.toggle('hidden-btn', !canEditorAny);
+      if (!canEditorAny && typeof closeEditorPanel === 'function') closeEditorPanel();
+      const appealBtnEl0 = document.getElementById('appealBtn');
+      if (appealBtnEl0) appealBtnEl0.classList.toggle('hidden-btn', !currentUser);
       const gearBtn = authWidgetEl && authWidgetEl.querySelector('#adminGearBtn');
       if (gearBtn) gearBtn.style.display = perms.manageRoles ? 'flex' : 'none';
       const safe = (fn) => { try { fn(); } catch (e) { console.error(e); } };
@@ -1060,6 +1291,10 @@
       safe(() => renderStats());
       safe(() => updateHistoryBadge());
       safe(() => updateSquareEditVisibility());
+      safe(() => refreshEditorPanel());
+      safe(() => syncAppealsSubscription());
+      safe(() => updateAppealsBadge());
+      safe(() => updateAttackBanners());
       safe(() => { if (adminPanelOpen) renderAdminPanelContent(); });
       return perms;
     }
@@ -1126,6 +1361,7 @@
         adminPanelEl.querySelectorAll('.admin-tab-panel').forEach((p) => p.classList.toggle('active', p.id === panelId));
         if (tab === 'logs') { subscribeAdminLogs(); renderAdminLogs(); }
         if (tab === 'combat') renderFactionCdList();
+        if (tab === 'appeals') renderAppeals();
       };
     });
 
@@ -1429,7 +1665,7 @@
     function clearSquareCooldowns(ids) {
       const upd = {};
       ids.forEach((id) => {
-        if (squareAttackState(squareData[id])) { upd[`${id}/attackAt`] = null; upd[`${id}/lastAttackedAt`] = null; }
+        if (squareAttackState(squareData[id]) || (squareData[id] && squareData[id].noticeUntil)) { upd[`${id}/attackAt`] = null; upd[`${id}/lastAttackedAt`] = null; upd[`${id}/attackerFaction`] = null; upd[`${id}/noticeUntil`] = null; }
       });
       return Object.keys(upd).length ? squaresRef.update(upd) : Promise.resolve();
     }
@@ -1806,8 +2042,13 @@
       const badgeEl = authWidgetEl && authWidgetEl.querySelector('#userRoleBadge');
       if (!badgeEl) return;
       if (perms.owner) {
-        badgeEl.textContent = 'ADMIN';
-        badgeEl.style.background = '#5865F2';
+        if (perms.acting) {
+          badgeEl.textContent = 'ADMIN · ' + (perms.roleIcon ? perms.roleIcon + ' ' : '') + perms.roleName;
+          badgeEl.style.background = perms.roleColor || '#5865F2';
+        } else {
+          badgeEl.textContent = 'ADMIN';
+          badgeEl.style.background = '#5865F2';
+        }
         badgeEl.style.display = 'inline-block';
       } else if (perms.roleName) {
         badgeEl.textContent = (perms.roleIcon ? perms.roleIcon + ' ' : '') + perms.roleName;
@@ -1826,41 +2067,75 @@
     // ограничений (обычные роли без faction/лимитов).
     function updateCombatBadges() {
       const wrapEl = combatStatusBadgeEl;
-      const attackEl = wrapEl && wrapEl.querySelector('#combatAttackBadge');
-      const defenseEl = wrapEl && wrapEl.querySelector('#combatDefenseBadge');
-      if (!wrapEl || !attackEl || !defenseEl) return;
+      if (!wrapEl) return;
       const perms = window.currentPerms || {};
-      // Берём usage строго по сегодняшней (МСК) дате — так плашка сама
-      // "обнуляется" в 00:00 МСК (см. dailyRolloverWatcher ниже, который
-      // дёргает этот же пересчёт каждую минуту, включая момент смены даты).
-      const dateKey = todayKey();
-      const usage = (perms.roleId && roleUsageData[perms.roleId] && roleUsageData[perms.roleId][dateKey]) || {};
-      let anyVisible = false;
-      if (perms.attacksPerDay != null) {
-        const used = usage.attacks || 0;
-        attackEl.textContent = `⚔ ${used}/${perms.attacksPerDay}`;
-        attackEl.classList.toggle('full', used >= perms.attacksPerDay);
-        attackEl.classList.remove('hidden');
-        anyVisible = true;
-      } else {
-        attackEl.classList.add('hidden');
-      }
-      if (perms.defensesPerDay != null) {
-        const used = usage.defenses || 0;
-        defenseEl.textContent = `🛡 ${used}/${perms.defensesPerDay}`;
-        defenseEl.classList.toggle('full', used >= perms.defensesPerDay);
-        defenseEl.classList.remove('hidden');
-        anyVisible = true;
-      } else {
-        defenseEl.classList.add('hidden');
-      }
+      const attackEl = wrapEl.querySelector('#combatAttackBadge');
+      const defenseEl = wrapEl.querySelector('#combatDefenseBadge');
       const cdEl = wrapEl.querySelector('#combatCdBadge');
-      if (cdEl) {
-        const rem = perms.faction ? fcRemaining(perms.faction, 'attack') : 0;
-        if (rem > 0) { cdEl.textContent = `⚔ КД ${formatMMSS(rem)}`; cdEl.classList.remove('hidden'); anyVisible = true; }
-        else cdEl.classList.add('hidden');
+      const defCdEl = wrapEl.querySelector('#combatDefCdBadge');
+      const setTxt = (el, txt) => { const b = el.querySelector('b'); if (b && b.textContent !== txt) b.textContent = txt; };
+      // usage берём строго по сегодняшней (МСК) дате — счётчик сам обнуляется в 00:00 МСК.
+      const usage = (perms.roleId && roleUsageData[perms.roleId] && roleUsageData[perms.roleId][todayKey()]) || {};
+      let any = false;
+      if (currentUser && perms.attacksPerDay != null) {
+        const used = usage.attacks || 0;
+        setTxt(attackEl, `${used}/${perms.attacksPerDay}`);
+        attackEl.classList.toggle('full', used >= perms.attacksPerDay);
+        attackEl.classList.remove('hidden'); any = true;
+      } else attackEl.classList.add('hidden');
+      if (currentUser && perms.defensesPerDay != null) {
+        const used = usage.defenses || 0;
+        setTxt(defenseEl, `${used}/${perms.defensesPerDay}`);
+        defenseEl.classList.toggle('full', used >= perms.defensesPerDay);
+        defenseEl.classList.remove('hidden'); any = true;
+      } else defenseEl.classList.add('hidden');
+      cdEl.classList.add('hidden'); defCdEl.classList.add('hidden');
+      if (currentUser && perms.faction) {
+        try {
+          // часы — КД атаки фракции (00:12:19), всегда видны у роли с фракцией
+          setTxt(cdEl, fmtHMS(fcRemaining(perms.faction, 'attack')));
+          cdEl.classList.remove('hidden'); any = true;
+          // синие часы — КД защиты (самый долгий у квадратов фракции), только пока идёт
+          let dmax = 0;
+          factionSquares(perms.faction).forEach((id) => {
+            const st = squareAttackState(squareData[id]);
+            if (st && st.state === 'cooldown') dmax = Math.max(dmax, st.remaining);
+          });
+          if (dmax > 0) { setTxt(defCdEl, fmtHMS(dmax)); defCdEl.classList.remove('hidden'); }
+        } catch (e) {}
       }
-      wrapEl.classList.toggle('hidden', !anyVisible);
+      wrapEl.classList.toggle('hidden', !any);
+      try { updateAttackBanners(); } catch (e) {}
+    }
+
+    // "ВЫ НАПАЛИ" — всем ролям фракции-нападающей; "НА ВАС НАПАЛИ" — всем ролям
+    // фракции, чей квадрат атакуют. Отсчёт — до начала атаки (noticeUntil).
+    function bannerHtml(kind, text, rem) {
+      return `<div class="attack-banner ${kind}"><span class="ico">${kind === 'attack' ? ICONS.swords : ICONS.shield}</span><span class="txt">${text}</span><span class="sep"></span><span class="time"><span class="ico">${ICONS.clock}</span>${fmtHMS(rem)}</span></div>`;
+    }
+    function updateAttackBanners() {
+      const box = document.getElementById('attackBanners');
+      if (!box) return;
+      const perms = window.currentPerms || {};
+      const f = perms.faction;
+      let atk = null, def = null;
+      if (currentUser && f) {
+        const now = serverNow();
+        Object.keys(squareData).forEach((id) => {
+          const d = squareData[id];
+          if (!d) return;
+          let until = d.noticeUntil || 0;
+          if (!until) { const st = squareAttackState(d); if (st && st.state === 'pending') until = st.start; }
+          const rem = until - now;
+          if (rem <= 0) return;
+          if (d.attackerFaction === f) { if (atk === null || rem < atk) atk = rem; }
+          else if (d.faction === f) { if (def === null || rem < def) def = rem; }
+        });
+      }
+      let html = '';
+      if (atk !== null) html += bannerHtml('attack', 'ВЫ НАПАЛИ', atk);
+      if (def !== null) html += bannerHtml('defense', 'НА ВАС НАПАЛИ', def);
+      if (box._last !== html) { box.innerHTML = html; box._last = html; }
     }
 
     // Раз в минуту пересчитываем плашку и КД-таймеры квадратов — это
@@ -1916,9 +2191,10 @@
       combatStatusBadgeEl = L.DomUtil.create('div', 'combat-status-badge hidden');
       combatStatusBadgeEl.id = 'combatStatusBadge';
       combatStatusBadgeEl.innerHTML = `
-        <span class="combat-badge attack hidden" id="combatAttackBadge" title="Атак сегодня">⚔ 0/0</span>
-        <span class="combat-badge defense hidden" id="combatDefenseBadge" title="Получено защиты сегодня">🛡 0/0</span>
-        <span class="combat-badge cd hidden" id="combatCdBadge" title="КД атаки вашей фракции: следующая атака — после таймера">⏳ 00:00</span>
+        <span class="combat-badge attack hidden" id="combatAttackBadge" title="Атак сегодня"><span class="ico">${ICONS.swords}</span><b>0/0</b></span>
+        <span class="combat-badge defense hidden" id="combatDefenseBadge" title="Получено защиты сегодня"><span class="ico">${ICONS.shield}</span><b>0/0</b></span>
+        <span class="combat-badge cd hidden" id="combatCdBadge" title="КД атаки вашей фракции"><span class="ico">${ICONS.clock}</span><b>00:00:00</b></span>
+        <span class="combat-badge cd def hidden" id="combatDefCdBadge" title="КД защиты ваших квадратов"><span class="ico">${ICONS.clock}</span><b>00:00:00</b></span>
       `;
       L.DomEvent.disableClickPropagation(combatStatusBadgeEl);
       return combatStatusBadgeEl;
@@ -1946,9 +2222,9 @@
     bottomLeftMenu.onAdd = function () {
       const div = L.DomUtil.create('div', 'bottom-left-stack');
       div.innerHTML = `
-        <div class="bottom-left-menu"><button id="statsBtn">📊 Статистика</button></div>
+        <div class="bottom-left-menu"><button id="statsBtn">📊 Статистика</button><button id="appealBtn" class="hidden-btn">✉ Обращение</button></div>
         <div class="bottom-left-menu">
-          <button id="addSquareBtn" class="hidden-btn">➕ Квадрат</button>
+          <button id="addSquareBtn" class="hidden-btn">✏️ Редактор</button>
           <button id="battleHistoryBtn">📜 История сражений<span class="history-badge hidden" id="historyBadge">0</span></button>
         </div>
       `;
@@ -1958,9 +2234,301 @@
       return div;
     };
     bottomLeftMenu.addTo(map);
-    document.getElementById('addSquareBtn').onclick = () => toggleSquareMode();
+    document.getElementById('addSquareBtn').onclick = () => toggleEditorPanel();
     document.getElementById('battleHistoryBtn').onclick = () => openBattleHistory();
     document.getElementById('statsBtn').onclick = () => openStats();
+
+    // ================= РЕДАКТОР / ВРЕМЕННАЯ РОЛЬ / ОБРАЩЕНИЯ =================
+    function edMsg(text, isErr) {
+      edMsgEl.textContent = text || '';
+      edMsgEl.className = 'ed-msg ' + (text ? (isErr ? 'err' : 'ok') : '');
+      clearTimeout(edMsg._t);
+      if (text) edMsg._t = setTimeout(() => { edMsgEl.textContent = ''; }, 5000);
+    }
+
+    function openEditorPanel() {
+      editorPanelOpen = true;
+      editorPanelEl.classList.add('visible');
+      if (addSquareBtnEl) addSquareBtnEl.classList.add('active');
+      refreshEditorPanel();
+    }
+    function closeEditorPanel() {
+      editorPanelOpen = false;
+      editorPanelEl.classList.remove('visible');
+      if (addSquareBtnEl) addSquareBtnEl.classList.remove('active');
+    }
+    function toggleEditorPanel() { editorPanelOpen ? closeEditorPanel() : openEditorPanel(); }
+    document.getElementById('editorCloseBtn').onclick = closeEditorPanel;
+
+    function refreshEditorPanel() {
+      const perms = window.currentPerms || {};
+      const canCombat = !!(perms.manageRoles || perms.owner);
+      const isOwner = !!perms.owner;
+      document.getElementById('edSquareBtn').style.display = perms.manageSquares ? '' : 'none';
+      document.getElementById('edCombatSection').style.display = canCombat ? '' : 'none';
+      document.getElementById('edCombatBtns').style.display = canCombat ? 'contents' : 'none';
+      document.getElementById('edOwnerSection').style.display = isOwner ? '' : 'none';
+      document.getElementById('edAppealBtn').style.display = currentUser ? '' : 'none';
+      if (!edFactionInit) {
+        edFactionSel.innerHTML = '<option value="ALL">Все фракции</option>' +
+          FACTIONS.map((f) => `<option value="${f}">${escapeHtml(FACTION_NAMES[f] || f)}</option>`).join('');
+        edFactionSel.value = FACTIONS.includes(perms.faction) ? perms.faction : FACTIONS[0];
+        edFactionInit = true;
+      }
+      if (isOwner) {
+        const ids = Object.keys(rolesData).filter((id) => rolesData[id] && rolesData[id].faction).sort((a, b) => {
+          const ra = rolesData[a], rb = rolesData[b];
+          return (FACTIONS.indexOf(ra.faction) - FACTIONS.indexOf(rb.faction)) ||
+                 ((ra.rank === 'LEADER' ? 0 : 1) - (rb.rank === 'LEADER' ? 0 : 1));
+        });
+        const sig = ids.join(',');
+        if (sig !== edRoleSig) {
+          edRoleSig = sig;
+          edRoleSel.innerHTML = ids.length
+            ? ids.map((id) => `<option value="${escapeHtml(id)}">${escapeHtml(roleLabel(id))}</option>`).join('')
+            : '<option value="">Нет ролей фракций</option>';
+        }
+        if (perms.acting && ids.includes(perms.roleId) && document.activeElement !== edRoleSel) edRoleSel.value = perms.roleId;
+        document.getElementById('edRoleCurrent').textContent = perms.acting
+          ? 'Сейчас вы действуете как: ' + roleLabel(perms.roleId)
+          : 'Временная роль не выбрана';
+        document.getElementById('edRoleDropBtn').style.display = perms.acting ? '' : 'none';
+        document.getElementById('edRoleTakeBtn').textContent = perms.acting ? 'Сменить роль' : 'Взять роль';
+      }
+    }
+
+    function setOwnerActingRole(id) {
+      if (!currentUser || !isOwnerId(currentUser.id)) return;
+      ownerActingRoleId = id || null;
+      try { if (id) localStorage.setItem(OWNER_ROLE_KEY, id); else localStorage.removeItem(OWNER_ROLE_KEY); } catch (e) {}
+      if (id && rolesData[id] && FACTIONS.includes(rolesData[id].faction)) edFactionSel.value = rolesData[id].faction;
+      applyCurrentPermissions();
+      logAction(id ? 'Взял временную роль' : 'Снял временную роль', id ? roleNameOf(id) : null);
+    }
+    document.getElementById('edRoleTakeBtn').onclick = () => {
+      const id = edRoleSel.value;
+      if (!id || !rolesData[id]) { edMsg('Выберите роль', true); return; }
+      setOwnerActingRole(id);
+      edMsg('Вы действуете как ' + roleNameOf(id));
+    };
+    document.getElementById('edRoleDropBtn').onclick = () => { setOwnerActingRole(null); edMsg('Временная роль снята'); };
+
+    // +1 / −1 к суточному счётчику атак или защиты — у всех ролей выбранной фракции.
+    function adjustFactionCounter(f, kind, delta) {
+      const roleIds = Object.keys(rolesData).filter((rid) => rolesData[rid] && rolesData[rid].faction === f);
+      if (!roleIds.length) return Promise.reject(new Error('У фракции ' + f + ' нет ролей'));
+      const field = kind === 'attack' ? 'attacks' : 'defenses';
+      const limitKey = kind === 'attack' ? 'attacksPerDay' : 'defensesPerDay';
+      const dateKey = todayKey();
+      return Promise.all(roleIds.map((rid) => {
+        const lim = rolesData[rid][limitKey];
+        return roleUsageRef.child(rid).child(dateKey).child(field).transaction((cur) => {
+          let v = (cur || 0) + delta;
+          if (v < 0) v = 0;
+          if (lim != null && v > Number(lim)) v = Number(lim);
+          return v;
+        });
+      })).then(() => {
+        updateCombatBadges();
+        return logAction((delta > 0 ? 'Добавил ' : 'Убрал ') + (kind === 'attack' ? 'атаку' : 'защиту') + ' фракции', f);
+      });
+    }
+    function edResetCd(kind, f) {
+      if (kind === 'attack') {
+        const upd = {};
+        (f === 'ALL' ? FACTIONS : [f]).forEach((x) => { upd[`${x}/attackUntil`] = null; });
+        return factionCooldownsRef.update(upd).then(() => logAction('Сбросил КД атаки', f === 'ALL' ? 'все фракции' : f));
+      }
+      const ids = f === 'ALL' ? Object.keys(squareData) : factionSquares(f);
+      return clearSquareCooldowns(ids).then(() => logAction('Сбросил КД защиты', f === 'ALL' ? 'все фракции' : f));
+    }
+    editorPanelEl.querySelectorAll('[data-ed]').forEach((btn) => {
+      btn.onclick = () => {
+        const f = edFactionSel.value;
+        const act = btn.dataset.ed;
+        const label = f === 'ALL' ? 'все фракции' : f;
+        let p;
+        let okText;
+        if (act === 'cdatk') { p = edResetCd('attack', f); okText = `КД атаки сброшен: ${label}`; }
+        else if (act === 'cddef') { p = edResetCd('defense', f); okText = `КД защиты сброшен: ${label}`; }
+        else {
+          if (f === 'ALL') { edMsg('Выберите конкретную фракцию', true); return; }
+          const kind = act.startsWith('atk') ? 'attack' : 'defense';
+          const delta = act.endsWith('+') ? 1 : -1;
+          p = adjustFactionCounter(f, kind, delta);
+          okText = `${kind === 'attack' ? '⚔ Атака' : '🛡 Защита'} ${delta > 0 ? '+1' : '−1'}: ${f}`;
+        }
+        p.then(() => edMsg(okText)).catch((err) => edMsg('Ошибка: ' + ((err && err.message) || err), true));
+      };
+    });
+    document.getElementById('edSquareBtn').onclick = () => toggleSquareMode();
+    document.getElementById('edAppealBtn').onclick = () => openAppealModal();
+
+    // ---- Уведомления (тосты) ----
+    function showToast(title, body, onClick) {
+      const box = document.getElementById('toastBox');
+      const el = document.createElement('div');
+      el.className = 'toast';
+      el.innerHTML = `<div class="toast-title">${escapeHtml(title)}</div><div class="toast-body">${escapeHtml(body)}</div>`;
+      el.onclick = () => { el.remove(); if (onClick) onClick(); };
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 12000);
+    }
+    function beep() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const c = new AC(), o = c.createOscillator(), g = c.createGain();
+        o.connect(g); g.connect(c.destination);
+        o.type = 'sine'; o.frequency.value = 880; g.gain.value = 0.05;
+        o.start(); o.stop(c.currentTime + 0.18);
+        setTimeout(() => c.close(), 400);
+      } catch (e) {}
+    }
+
+    // ---- Обращения ----
+    const appealModalEl = document.getElementById('appealModal');
+    const appealBackdropEl = document.getElementById('appealBackdrop');
+    const appealTextEl = document.getElementById('appealText');
+    const appealStatusEl = document.getElementById('appealStatus');
+    const appealSendBtnEl = document.getElementById('appealSendBtn');
+    let lastAppealAt = 0;
+
+    function openAppealModal() {
+      if (!currentUser) return;
+      appealTextEl.value = '';
+      document.getElementById('appealCounter').textContent = '0/1000';
+      appealStatusEl.textContent = ''; appealStatusEl.className = 'ed-msg';
+      appealSendBtnEl.disabled = false;
+      appealModalEl.classList.add('visible');
+      appealBackdropEl.classList.add('visible');
+      setTimeout(() => appealTextEl.focus(), 50);
+    }
+    function closeAppealModal() {
+      appealModalEl.classList.remove('visible');
+      appealBackdropEl.classList.remove('visible');
+    }
+    appealTextEl.oninput = () => { document.getElementById('appealCounter').textContent = appealTextEl.value.length + '/1000'; };
+    document.getElementById('appealCloseBtn').onclick = closeAppealModal;
+    document.getElementById('appealCancelBtn').onclick = closeAppealModal;
+    appealBackdropEl.onclick = closeAppealModal;
+    function appealStatus(text, isErr) { appealStatusEl.textContent = text; appealStatusEl.className = 'ed-msg ' + (isErr ? 'err' : 'ok'); }
+
+    appealSendBtnEl.onclick = () => {
+      if (!currentUser) return;
+      const text = appealTextEl.value.trim();
+      if (text.length < 5) { appealStatus('Напишите текст обращения (минимум 5 символов).', true); return; }
+      if (Date.now() - lastAppealAt < 30000) { appealStatus('Подождите немного перед отправкой следующего обращения.', true); return; }
+      const perms = window.currentPerms || {};
+      appealSendBtnEl.disabled = true;
+      appealsRef.push({
+        ts: firebase.database.ServerValue.TIMESTAMP,
+        userId: currentUser.id,
+        userName: currentUser.global_name || currentUser.username || currentUser.id,
+        role: perms.owner ? 'Супер админ' : (perms.roleName || null),
+        faction: perms.owner ? null : (perms.faction || null),
+        text: text.slice(0, 1000),
+        status: 'new'
+      }).then(() => {
+        lastAppealAt = Date.now();
+        appealStatus('Обращение отправлено ✔');
+        logAction('Создал обращение');
+        setTimeout(closeAppealModal, 900);
+      }).catch((err) => {
+        appealSendBtnEl.disabled = false;
+        appealStatus('Не удалось отправить: ' + ((err && err.message) || err) + '. Проверьте правила Firebase для узла "appeals".', true);
+      });
+    };
+
+    function notifyNewAppeal(a) {
+      const who = a.userName || 'Игрок';
+      const snippet = String(a.text || '').slice(0, 160);
+      showToast('✉ Новое обращение от ' + who, snippet, () => openAdminAppealsTab());
+      beep();
+      try {
+        if ('Notification' in window && Notification.permission === 'granted') new Notification('Новое обращение от ' + who, { body: snippet });
+      } catch (e) {}
+    }
+    function openAdminAppealsTab() {
+      openAdminPanel();
+      const tabBtn = adminPanelEl.querySelector('[data-admin-tab="appeals"]');
+      if (tabBtn) tabBtn.click();
+    }
+    function updateAppealsBadge() {
+      const n = Object.keys(appealsData).filter((k) => appealsData[k] && appealsData[k].status !== 'done').length;
+      const gear = authWidgetEl && authWidgetEl.querySelector('#adminGearBtn');
+      if (gear) {
+        let dot = gear.querySelector('.gear-dot');
+        if (!dot) { dot = document.createElement('span'); dot.className = 'gear-dot'; gear.appendChild(dot); }
+        dot.textContent = n > 99 ? '99+' : String(n);
+        dot.style.display = n ? 'flex' : 'none';
+      }
+      const tab = document.getElementById('appealsTabCount');
+      if (tab) tab.textContent = n ? ` (${n})` : '';
+    }
+    // Обращения читает только супер админ — подписка запускается при его входе.
+    function syncAppealsSubscription() {
+      if (!currentUser || !isOwnerId(currentUser.id) || appealsSubscribed) return;
+      appealsSubscribed = true;
+      appealsRef.on('value', (snap) => {
+        const next = snap.val() || {};
+        if (appealsLoaded) {
+          Object.keys(next).forEach((k) => {
+            if (!appealsData[k] && next[k] && next[k].status !== 'done') notifyNewAppeal(next[k]);
+          });
+        }
+        appealsData = next;
+        appealsLoaded = true;
+        updateAppealsBadge();
+        if (adminPanelOpen) renderAppeals();
+      }, (err) => { appealsSubscribed = false; showAdminError(err); });
+      if ('Notification' in window && Notification.permission === 'default') {
+        const ask = () => { document.removeEventListener('click', ask); try { Notification.requestPermission(); } catch (e) {} };
+        document.addEventListener('click', ask);
+      }
+    }
+    function renderAppeals() {
+      const listEl = document.getElementById('appealsList');
+      if (!listEl) return;
+      const keys = Object.keys(appealsData).filter((k) => appealsData[k])
+        .sort((a, b) => (appealsData[b].ts || 0) - (appealsData[a].ts || 0));
+      if (!keys.length) { listEl.innerHTML = '<div class="admin-empty-hint">Обращений пока нет.</div>'; return; }
+      listEl.innerHTML = keys.map((k) => {
+        const a = appealsData[k];
+        const done = a.status === 'done';
+        return `<div class="appeal-item ${done ? 'done' : 'new'}">
+          <div class="appeal-head"><b>${escapeHtml(a.userName || '—')}</b><span class="appeal-meta">${escapeHtml(a.role || 'без роли')}${a.faction ? ' · ' + escapeHtml(a.faction) : ''} · ID ${escapeHtml(a.userId || '')}</span></div>
+          <div class="appeal-time">${escapeHtml(formatTimestamp(a.ts))}${done ? ' · решено' : ''}</div>
+          <div class="appeal-text">${escapeHtml(a.text || '')}</div>
+          <div class="appeal-actions">
+            <button type="button" data-appeal-toggle="${escapeHtml(k)}">${done ? '↺ Вернуть' : '✔ Решено'}</button>
+            <button type="button" data-appeal-del="${escapeHtml(k)}">🗑 Удалить</button>
+          </div>
+        </div>`;
+      }).join('');
+      listEl.querySelectorAll('[data-appeal-toggle]').forEach((btn) => {
+        btn.onclick = () => {
+          const k = btn.dataset.appealToggle;
+          appealsRef.child(k).update({ status: (appealsData[k] && appealsData[k].status === 'done') ? 'new' : 'done' }).catch(showAdminError);
+        };
+      });
+      listEl.querySelectorAll('[data-appeal-del]').forEach((btn) => {
+        btn.onclick = () => { appealsRef.child(btn.dataset.appealDel).remove().catch(showAdminError); };
+      });
+    }
+    document.getElementById('appealsDoneAllBtn').onclick = () => {
+      const upd = {};
+      Object.keys(appealsData).forEach((k) => { if (appealsData[k] && appealsData[k].status !== 'done') upd[`${k}/status`] = 'done'; });
+      if (Object.keys(upd).length) appealsRef.update(upd).catch(showAdminError);
+    };
+    document.getElementById('appealsClearDoneBtn').onclick = () => {
+      const upd = {};
+      Object.keys(appealsData).forEach((k) => { if (appealsData[k] && appealsData[k].status === 'done') upd[k] = null; });
+      if (Object.keys(upd).length) appealsRef.update(upd).catch(showAdminError);
+    };
+    document.getElementById('appealBtn').onclick = () => openAppealModal();
+    try { refreshEditorPanel(); } catch (e) {}
+    try { updateAppealsBadge(); } catch (e) {}
 
     setTimeout(() => {
       const darkBtn=document.getElementById('darkBtn');
@@ -2408,9 +2976,10 @@
 
     function setSquareModeActive(active) {
       squareModeActive = active;
-      if (addSquareBtnEl) {
-        addSquareBtnEl.classList.toggle('active', active);
-        addSquareBtnEl.textContent = active ? '✖ Выключить' : '➕ Квадрат';
+      const edSq = document.getElementById('edSquareBtn');
+      if (edSq) {
+        edSq.classList.toggle('active', active);
+        edSq.textContent = active ? '✖ Выключить квадраты' : '➕ Квадрат';
       }
       map.getContainer().style.cursor = active ? 'crosshair' : '';
       if (active) {
@@ -2597,7 +3166,12 @@
       }
       // 3) Ставим квадрату метку времени атаки — включает часовую задержку
       // на повторную атаку этого же квадрата для всех, и запускает онлайн-таймер.
-      tasks.push(squaresRef.child(id).update({ attackAt: extra.attackAt || serverNow(), lastAttackedAt: null }));
+      const atkAtTs = extra.attackAt || serverNow();
+      tasks.push(squaresRef.child(id).update({
+        attackAt: atkAtTs, lastAttackedAt: null,
+        attackerFaction: perms.faction || null,
+        noticeUntil: atkAtTs > serverNow() ? atkAtTs : serverNow() + ATTACK_PREP_DELAY_MS
+      }));
       // 3.1) КД атаки фракции-нападающей на 1 час. КД защиты — только у самого
       // атакованного квадрата (attackAt выше), остальные квадраты фракции не затрагиваются.
       const cdUntil = (extra.attackAt || serverNow()) + ATTACK_COOLDOWN_MS;
@@ -2813,7 +3387,7 @@
     document.getElementById('sqEditResetCdBtn').onclick = () => {
       if (!window.canEditSquareResult || !infoSquareId) return;
       const id = infoSquareId, lbl = sqName(id);
-      squaresRef.child(id).update({ attackAt: null, lastAttackedAt: null })
+      squaresRef.child(id).update({ attackAt: null, lastAttackedAt: null, attackerFaction: null, noticeUntil: null })
         .then(() => { sqEditMsg('КД этого квадрата сброшен'); logAction('Сбросил КД квадрата', `«${lbl}»`); })
         .catch((e) => sqEditMsg('Ошибка: ' + ((e && e.message) || e), true));
     };
