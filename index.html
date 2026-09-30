@@ -1050,6 +1050,16 @@
   <script>
     const DISCORD_CLIENT_ID = '1553547752389214248';
     const ADMIN_DISCORD_IDS = ['591164513353465856'];
+    // Адрес Cloudflare Worker'а, который шлёт супер-админу ЛС в Discord при
+    // атаке (см. функцию notifyAttackViaWorker ниже и cloudflare-worker/README.md).
+    // Замените на URL, который выдаст `wrangler deploy` — что-то вроде
+    // 'https://majestic-map-notify.ВАШ_САБДОМЕН.workers.dev'.
+    const ATTACK_NOTIFY_WORKER_URL = 'https://majestic-map-notify.YOUR-SUBDOMAIN.workers.dev';
+    // Тот же общий секрет, что вы зададите Worker'у командой
+    // `wrangler secret put SHARED_SECRET` — просто произвольная строка,
+    // защищает Worker от посторонних вызовов (это не токен бота и не даёт
+    // доступа к Discord напрямую, но не публикуйте её без необходимости).
+    const ATTACK_NOTIFY_SHARED_SECRET = 'ЗАМЕНИТЕ_НА_СВОЮ_СЛУЧАЙНУЮ_СТРОКУ';
     const FIREBASE_CONFIG = {
       apiKey: 'AIzaSyCm5SLgYYSEaPDWrY0zApMvl1jCHSF_53E',
       authDomain: 'state-control-league.firebaseapp.com',
@@ -3384,6 +3394,26 @@
       return selectedMoment + ATTACK_PREP_DELAY_MS;
     }
 
+    // Дёргает Cloudflare Worker, который открывает ЛС в Discord и пишет
+    // супер-админу, кто на кого напал. Специально НЕ входит в Promise.all()
+    // выше и обёрнута в try/catch — если Worker недоступен или ещё не
+    // задеплоен, это не должно ломать саму атаку в игре.
+    function notifyAttackViaWorker(payload) {
+      if (!ATTACK_NOTIFY_WORKER_URL || ATTACK_NOTIFY_WORKER_URL.includes('YOUR-SUBDOMAIN')) return;
+      try {
+        fetch(ATTACK_NOTIFY_WORKER_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Notify-Secret': ATTACK_NOTIFY_SHARED_SECRET
+          },
+          body: JSON.stringify(payload)
+        }).catch((err) => console.warn('Не удалось отправить уведомление об атаке:', err));
+      } catch (err) {
+        console.warn('Не удалось отправить уведомление об атаке:', err);
+      }
+    }
+
     function performAttack(id, data, extra) {
       extra = extra || {};
       const perms = window.currentPerms || {};
@@ -3436,6 +3466,15 @@
       }));
 
       tasks.push(logAction('Напал на квадрат', `«${squareLabel}»${squareFaction ? ` (${squareFaction})` : ''}${perms.faction ? `, от ${perms.faction}` : ''}${extra.plannedTime ? `, время ${extra.plannedTime} МСК` : ''}`));
+
+      notifyAttackViaWorker({
+        attackerName,
+        attackerRole: perms.roleName || null,
+        attackerFaction: perms.faction || null,
+        squareLabel,
+        squareFaction: squareFaction || null
+      });
+
       return Promise.all(tasks).then((res) => {
         // Подстраховка: сразу пересчитываем плашку атаки/защиты и таймер КД
         // на квадрате, не дожидаясь live-события от Firebase (обычно оно и
