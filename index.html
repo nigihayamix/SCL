@@ -1050,16 +1050,8 @@
   <script>
     const DISCORD_CLIENT_ID = '1553547752389214248';
     const ADMIN_DISCORD_IDS = ['591164513353465856'];
-    // Адрес Cloudflare Worker'а, который шлёт супер-админу ЛС в Discord при
-    // атаке (см. функцию notifyAttackViaWorker ниже и cloudflare-worker/README.md).
-    // Замените на URL, который выдаст `wrangler deploy` — что-то вроде
-    // 'https://majestic-map-notify.ВАШ_САБДОМЕН.workers.dev'.
-    const ATTACK_NOTIFY_WORKER_URL = 'https://majestic-map-notify.YOUR-SUBDOMAIN.workers.dev';
-    // Тот же общий секрет, что вы зададите Worker'у командой
-    // `wrangler secret put SHARED_SECRET` — просто произвольная строка,
-    // защищает Worker от посторонних вызовов (это не токен бота и не даёт
-    // доступа к Discord напрямую, но не публикуйте её без необходимости).
-    const ATTACK_NOTIFY_SHARED_SECRET = 'ЗАМЕНИТЕ_НА_СВОЮ_СЛУЧАЙНУЮ_СТРОКУ';
+    const ATTACK_NOTIFY_WORKER_URL = 'https://majestic-map-notify.scldn.workers.dev';
+    const ATTACK_NOTIFY_SHARED_SECRET = '7f3a9c2e1d8b4ff1';
     const FIREBASE_CONFIG = {
       apiKey: 'AIzaSyCm5SLgYYSEaPDWrY0zApMvl1jCHSF_53E',
       authDomain: 'state-control-league.firebaseapp.com',
