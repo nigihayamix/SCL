@@ -2496,7 +2496,8 @@
       const perms = window.currentPerms || {};
       appealSendBtnEl._sending = true;
       appealSendBtnEl.disabled = true;
-      appealsRef.push({
+      const newAppealKey = appealsRef.push().key;
+      appealsRef.child(newAppealKey).set({
         ts: firebase.database.ServerValue.TIMESTAMP,
         userId: currentUser.id,
         userName: currentUser.global_name || currentUser.username || currentUser.id,
@@ -2506,6 +2507,7 @@
         status: 'new'
       }).then(() => {
         try { localStorage.setItem('appeal_last_' + currentUser.id, String(serverNow())); } catch (e) {}
+        notifyAppealViaWorker(newAppealKey);
         appealSendBtnEl._sending = false;
         appealStatus('Обращение отправлено ✔');
         appealTextEl.value = '';
@@ -3390,7 +3392,7 @@
     // супер-админу, кто на кого напал. Специально НЕ входит в Promise.all()
     // выше и обёрнута в try/catch — если Worker недоступен или ещё не
     // задеплоен, это не должно ломать саму атаку в игре.
-    function notifyAttackViaWorker(payload) {
+    function postToWorker(payload) {
       if (!ATTACK_NOTIFY_WORKER_URL || ATTACK_NOTIFY_WORKER_URL.includes('YOUR-SUBDOMAIN')) return;
       try {
         fetch(ATTACK_NOTIFY_WORKER_URL, {
@@ -3400,11 +3402,17 @@
             'X-Notify-Secret': ATTACK_NOTIFY_SHARED_SECRET
           },
           body: JSON.stringify(payload)
-        }).catch((err) => console.warn('Не удалось отправить уведомление об атаке:', err));
+        }).then((r) => r.json().catch(() => ({})).then((j) => {
+          // Причина, если ЛС не дошло (403 — секрет не совпал, errors — ответ Discord, напр. 50007).
+          if (!r.ok || (j && j.ok === false)) console.warn('Worker уведомление не доставлено:', r.status, j);
+        })).catch((err) => console.warn('Не удалось отправить уведомление:', err));
       } catch (err) {
-        console.warn('Не удалось отправить уведомление об атаке:', err);
+        console.warn('Не удалось отправить уведомление:', err);
       }
     }
+    function notifyAttackViaWorker(payload) { postToWorker(payload); }
+    // Новое обращение: Worker сам прочитает его из базы и пришлёт супер-админу ЛС с пингом.
+    function notifyAppealViaWorker(id) { postToWorker({ type: 'appeal', id }); }
 
     function performAttack(id, data, extra) {
       extra = extra || {};
