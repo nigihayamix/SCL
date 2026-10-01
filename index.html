@@ -240,6 +240,58 @@
     .appeal-actions button:hover { background: #3a3a42; }
     .admin-tabs { flex-wrap: wrap; }
 
+    /* Копирование квадрата */
+    .paste-hint {
+      display: none; position: fixed; left: 50%; top: 14px; transform: translateX(-50%);
+      z-index: 1400; align-items: center; gap: 12px;
+      background: rgba(18,18,18,.95); color: #ddd; border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px; padding: 10px 14px; font-size: 13px; box-shadow: 0 8px 28px rgba(0,0,0,.5);
+      max-width: calc(100vw - 24px);
+    }
+    .paste-hint.visible { display: flex; }
+    .paste-hint button {
+      border: 0; border-radius: 8px; padding: 7px 12px; cursor: pointer;
+      background: #3ba55d; color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap;
+    }
+
+    /* Что нового */
+    .whatsnew-ctl button {
+      position: relative; display: flex; align-items: center; gap: 8px;
+      border: 0; border-radius: 12px; padding: 10px 14px; cursor: pointer;
+      background: rgba(18,18,18,.9); color: #ddd; font-size: 14px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.35);
+    }
+    .whatsnew-ctl button:hover { background: rgba(40,40,44,.95); }
+    .build-chip { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: #5865F2; color: #fff; }
+    .wn-dot {
+      display: none; position: absolute; top: -4px; right: -4px; width: 12px; height: 12px;
+      border-radius: 50%; background: #f0521a; border: 2px solid #121212; box-sizing: border-box;
+    }
+    .wn-dot.on { display: block; }
+    .wn-modal { width: 460px; }
+    .wn-modal .info-modal-body { max-height: 64vh; overflow-y: auto; }
+    .wn-build { font-size: 13px; color: #b9b9be; margin-bottom: 10px; }
+    .wn-build b { color: #fff; }
+    .wn-owner { border: 1px dashed #3a3a3e; border-radius: 12px; padding: 10px; margin-bottom: 12px; }
+    .wn-owner input[type=text], .wn-owner textarea, .wn-edit textarea {
+      width: 100%; box-sizing: border-box; background: #26262a; color: #ddd;
+      border: 1px solid #3a3a3e; border-radius: 8px; padding: 8px; font: inherit; font-size: 13px; margin-bottom: 6px;
+    }
+    .wn-owner textarea, .wn-edit textarea { min-height: 84px; resize: vertical; }
+    .wn-btn { border: 0; border-radius: 8px; padding: 8px 12px; cursor: pointer; background: #2b2b30; color: #ddd; font-size: 12.5px; font-weight: 600; }
+    .wn-btn.primary { background: #5865F2; color: #fff; }
+    .wn-btn:disabled { opacity: .5; cursor: default; }
+    .wn-entry { background: #1f1f23; border: 1px solid #2f2f35; border-left: 3px solid #5865F2; border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+    .wn-entry-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; }
+    .wn-time { font-size: 11.5px; color: #8d8d92; }
+    .wn-text { font-size: 13px; color: #ddd; white-space: pre-wrap; word-break: break-word; }
+    .wn-entry-actions { margin-left: auto; display: flex; gap: 4px; }
+    .wn-entry-actions button { border: 0; background: transparent; cursor: pointer; font-size: 14px; padding: 2px 4px; opacity: .75; }
+    .wn-entry-actions button:hover { opacity: 1; }
+    .wn-msg { font-size: 12px; min-height: 16px; margin-top: 4px; }
+    .wn-msg.err { color: #ff8a8a; }
+    .wn-msg.ok { color: #7fd99a; }
+
     .map-square {
       border-radius: 4px;
       box-shadow: none;
@@ -812,6 +864,7 @@
       <button id="squareSaveBtn">💾 Сохранить</button>
       <button id="squareDeleteBtn">🗑 Удалить</button>
       <button id="squareCancelBtn">Отмена</button>
+      <button id="squareCopyBtn" type="button" style="flex:1 1 100%;display:none;" title="Скопировать этот квадрат: затем кликайте по карте, куда поставить копии">📋 Копировать квадрат</button>
       <button id="squareNeutralBtn" type="button" style="flex:1 1 100%;" title="Снять фракцию и покрасить в серый (применится после «Сохранить»)">⚪ Сделать нейтральным</button>
     </div>
   </div>
@@ -1020,6 +1073,27 @@
         </div>
       </div>
       <div id="edMsg" class="ed-msg"></div>
+    </div>
+  </div>
+
+  <div id="pasteHint" class="paste-hint"><span id="pasteHintText"></span><button type="button" id="pasteDoneBtn">✔ Готово</button></div>
+
+  <div id="whatsNewBackdrop" class="modal-backdrop"></div>
+  <div id="whatsNewModal" class="info-modal wn-modal">
+    <div class="info-modal-header">
+      <span class="info-modal-title">🆕 Что нового</span>
+      <button type="button" class="square-editor-close" id="whatsNewCloseBtn" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="info-modal-body">
+      <div class="wn-build">Текущая сборка: <b id="wnBuild"></b></div>
+      <div class="wn-owner" id="wnOwnerBox" style="display:none;">
+        <div class="editor-label">Новая запись</div>
+        <input type="text" id="wnVersionInput" maxlength="40" placeholder="Сборка, например beta 0.1.2">
+        <textarea id="wnTextInput" maxlength="2000" placeholder="Что изменено: по строке на пункт…"></textarea>
+        <button type="button" class="wn-btn primary" id="wnPublishBtn">Опубликовать</button>
+        <div class="wn-msg" id="wnMsg"></div>
+      </div>
+      <div id="wnList"></div>
     </div>
   </div>
 
@@ -2721,6 +2795,144 @@
     };
     document.getElementById('appealBtn').onclick = () => openAppealModal();
     try { syncAppealsSubscription(); } catch (e) {}
+    // ================= ЧТО НОВОГО =================
+    // Firebase: changelog/{id} = { ts, version, text, byId, byName, editedAt? }, changelogMeta/build = "beta 0.1.1".
+    // В правилах Realtime Database нужно разрешить чтение/запись узлов "changelog" и "changelogMeta".
+    const APP_BUILD_DEFAULT = 'beta 0.1.1';
+    const changelogRef = firebase.database().ref('changelog');
+    const changelogMetaRef = firebase.database().ref('changelogMeta');
+    let changelogData = {};
+    let changelogBuild = APP_BUILD_DEFAULT;
+    let wnEditId = null;
+    const wnModalEl = document.getElementById('whatsNewModal');
+    const wnBackdropEl = document.getElementById('whatsNewBackdrop');
+    const wnMsgEl = document.getElementById('wnMsg');
+
+    const whatsNewControl = L.control({ position: 'bottomright' });
+    whatsNewControl.onAdd = function () {
+      const div = L.DomUtil.create('div', 'whatsnew-ctl');
+      div.innerHTML = '<button id="whatsNewBtn" type="button">🆕 Что нового <span class="build-chip" id="whatsNewChip"></span><span class="wn-dot" id="whatsNewDot"></span></button>';
+      L.DomEvent.disableClickPropagation(div);
+      return div;
+    };
+    whatsNewControl.addTo(map);
+
+    const wnIsOwner = () => !!(currentUser && isOwnerId(currentUser.id));
+    function wnLatestTs() {
+      return Object.keys(changelogData).reduce((m, k) => Math.max(m, (changelogData[k] && changelogData[k].ts) || 0), 0);
+    }
+    function wnSeenTs() { try { return Number(localStorage.getItem('wn_seen_ts')) || 0; } catch (e) { return 0; } }
+    function wnMarkSeen() { try { localStorage.setItem('wn_seen_ts', String(Math.max(wnLatestTs(), wnSeenTs()))); } catch (e) {} updateWhatsNewBadge(); }
+    function updateWhatsNewBadge() {
+      const chip = document.getElementById('whatsNewChip');
+      if (chip) chip.textContent = changelogBuild;
+      const dot = document.getElementById('whatsNewDot');
+      if (dot) dot.classList.toggle('on', wnLatestTs() > wnSeenTs() && !wnModalEl.classList.contains('visible'));
+      const b = document.getElementById('wnBuild');
+      if (b) b.textContent = changelogBuild;
+    }
+    function wnMsg(text, isErr) {
+      wnMsgEl.textContent = text || '';
+      wnMsgEl.className = 'wn-msg ' + (text ? (isErr ? 'err' : 'ok') : '');
+    }
+    function renderWhatsNew() {
+      document.getElementById('wnOwnerBox').style.display = wnIsOwner() ? '' : 'none';
+      const listEl = document.getElementById('wnList');
+      const ids = Object.keys(changelogData).filter((k) => changelogData[k])
+        .sort((a, b) => (changelogData[b].ts || 0) - (changelogData[a].ts || 0));
+      if (!ids.length) { listEl.innerHTML = '<div class="admin-empty-hint">Записей пока нет.</div>'; return; }
+      const owner = wnIsOwner();
+      listEl.innerHTML = ids.map((k) => {
+        const e = changelogData[k];
+        const ek = escapeHtml(k);
+        const editing = owner && wnEditId === k;
+        return `<div class="wn-entry">
+          <div class="wn-entry-head">
+            <span class="build-chip">${escapeHtml(e.version || '')}</span>
+            <span class="wn-time">${escapeHtml(formatTimestamp(e.ts))}${e.editedAt ? ' · изменено' : ''}</span>
+            ${owner ? `<span class="wn-entry-actions"><button type="button" data-wn-edit="${ek}" title="Изменить">✏️</button><button type="button" data-wn-del="${ek}" title="Удалить">🗑</button></span>` : ''}
+          </div>
+          ${editing
+            ? `<div class="wn-edit"><textarea data-wn-edit-text="${ek}" maxlength="2000">${escapeHtml(e.text || '')}</textarea><button type="button" class="wn-btn primary" data-wn-save="${ek}">Сохранить</button> <button type="button" class="wn-btn" data-wn-cancel="1">Отмена</button></div>`
+            : `<div class="wn-text">${escapeHtml(e.text || '')}</div>`}
+        </div>`;
+      }).join('');
+      listEl.querySelectorAll('[data-wn-edit]').forEach((b) => { b.onclick = () => { wnEditId = b.dataset.wnEdit; renderWhatsNew(); }; });
+      listEl.querySelectorAll('[data-wn-cancel]').forEach((b) => { b.onclick = () => { wnEditId = null; renderWhatsNew(); }; });
+      listEl.querySelectorAll('[data-wn-save]').forEach((b) => {
+        b.onclick = () => {
+          const k = b.dataset.wnSave;
+          const ta = listEl.querySelector(`[data-wn-edit-text="${k}"]`);
+          const text = ta ? ta.value.trim() : '';
+          if (text.length < 2) return;
+          changelogRef.child(k).update({ text: text.slice(0, 2000), editedAt: firebase.database.ServerValue.TIMESTAMP })
+            .then(() => { wnEditId = null; logAction('Изменил запись «Что нового»', (changelogData[k] && changelogData[k].version) || ''); })
+            .catch((err) => wnMsg('Не удалось сохранить: ' + ((err && err.message) || err), true));
+        };
+      });
+      listEl.querySelectorAll('[data-wn-del]').forEach((b) => {
+        b.onclick = () => {
+          const k = b.dataset.wnDel;
+          if (!confirm('Удалить эту запись?')) return;
+          changelogRef.child(k).remove()
+            .then(() => logAction('Удалил запись «Что нового»', (changelogData[k] && changelogData[k].version) || ''))
+            .catch((err) => wnMsg('Не удалось удалить: ' + ((err && err.message) || err), true));
+        };
+      });
+    }
+    function openWhatsNew() {
+      wnEditId = null;
+      wnMsg('');
+      if (wnIsOwner()) document.getElementById('wnVersionInput').value = changelogBuild;
+      wnModalEl.classList.add('visible');
+      wnBackdropEl.classList.add('visible');
+      renderWhatsNew();
+      wnMarkSeen();
+    }
+    function closeWhatsNew() {
+      wnModalEl.classList.remove('visible');
+      wnBackdropEl.classList.remove('visible');
+      updateWhatsNewBadge();
+    }
+    document.getElementById('whatsNewBtn').onclick = openWhatsNew;
+    document.getElementById('whatsNewCloseBtn').onclick = closeWhatsNew;
+    wnBackdropEl.onclick = closeWhatsNew;
+
+    document.getElementById('wnPublishBtn').onclick = () => {
+      if (!wnIsOwner()) return;
+      const text = document.getElementById('wnTextInput').value.trim();
+      const version = document.getElementById('wnVersionInput').value.trim().slice(0, 40) || changelogBuild;
+      if (text.length < 2) { wnMsg('Напишите, что изменилось.', true); return; }
+      const btn = document.getElementById('wnPublishBtn');
+      btn.disabled = true;
+      const key = changelogRef.push().key;
+      Promise.all([
+        changelogRef.child(key).set({
+          ts: firebase.database.ServerValue.TIMESTAMP, version, text: text.slice(0, 2000),
+          byId: currentUser.id, byName: currentUser.global_name || currentUser.username || currentUser.id
+        }),
+        changelogMetaRef.update({ build: version })
+      ]).then(() => {
+        document.getElementById('wnTextInput').value = '';
+        wnMsg('Опубликовано ✔');
+        logAction('Добавил запись «Что нового»', version);
+      }).catch((err) => {
+        wnMsg('Не удалось опубликовать: ' + ((err && err.message) || err) + '. Проверьте правила Firebase для узлов "changelog" и "changelogMeta".', true);
+      }).finally(() => { btn.disabled = false; });
+    };
+
+    changelogRef.orderByKey().limitToLast(100).on('value', (snap) => {
+      changelogData = snap.val() || {};
+      updateWhatsNewBadge();
+      if (wnModalEl.classList.contains('visible')) { renderWhatsNew(); wnMarkSeen(); }
+    }, (err) => console.warn('changelog:', err && err.message));
+    changelogMetaRef.on('value', (snap) => {
+      const v = snap.val();
+      changelogBuild = (v && v.build) || APP_BUILD_DEFAULT;
+      updateWhatsNewBadge();
+    }, (err) => console.warn('changelogMeta:', err && err.message));
+    updateWhatsNewBadge();
+
     try { refreshEditorPanel(); } catch (e) {}
     try { updateAppealsBadge(); } catch (e) {}
 
@@ -2841,6 +3053,9 @@
       });
     }
 
+    let pasteTemplate = null; // режим копирования квадрата: шаблон, пока он активен
+    let pasteGhost = null;
+    let pasteCount = 0;
     let squareModeActive = false; // редактирование/добавление квадратов включается только этой кнопкой
     const squareData = {}; // id -> последние данные с сервера (используется для блокировки, инфо-панели и т.д.)
 
@@ -2864,6 +3079,7 @@
         // текст появляется по наведению за счёт CSS (.map-square:hover .map-square-label).
 
         marker.on('click', () => {
+          if (pasteTemplate) return; // во время копирования клики по квадратам не открывают редактор
           const current = squareData[id] || {};
           if (window.isAdmin && squareModeActive) {
             // Если этот же квадрат уже открыт в редакторе — не перезаписываем
@@ -3195,6 +3411,7 @@
       updateRangeLabels();
       updatePreview();
       deleteBtn.classList.toggle('hidden', !id || !window.canDeleteSquares);
+      document.getElementById('squareCopyBtn').style.display = id ? '' : 'none';
       editorTitleEl.textContent = id ? 'Редактирование квадрата' : 'Новый квадрат';
       editorEl.classList.add('visible');
       liveMapPreview();
@@ -3216,6 +3433,7 @@
     // клик по свободному месту карты создаёт новый квадрат (можно ставить
     // несколько подряд, не нажимая кнопку заново).
     function handleMapClickForSquare(e) {
+      if (pasteTemplate) return;
       if (!squareModeActive || !window.isAdmin) return;
       openSquareEditor(null, e.latlng, {});
     }
@@ -3232,6 +3450,7 @@
         map.on('click', handleMapClickForSquare);
       } else {
         map.off('click', handleMapClickForSquare);
+        stopPasteMode();
         closeSquareEditor();
       }
       refreshSquaresInteractivity();
@@ -3286,6 +3505,74 @@
       updatePreview();
     };
     document.getElementById('squareCancelBtn').onclick = closeSquareEditor;
+
+    // ---- Копирование квадрата: берём настройки из открытого редактора и ставим копии кликами по карте ----
+    const pasteHintEl = document.getElementById('pasteHint');
+    function updatePasteHint() {
+      const name = (pasteTemplate && pasteTemplate.label) || 'Без названия';
+      document.getElementById('pasteHintText').textContent =
+        `📋 Копия «${name}»: кликайте по карте, чтобы поставить · Esc — выйти` + (pasteCount ? ` · поставлено: ${pasteCount}` : '');
+      pasteHintEl.classList.add('visible');
+    }
+    function handlePasteMove(e) {
+      if (!pasteTemplate) return;
+      if (!pasteGhost) {
+        pasteGhost = L.marker(e.latlng, {
+          icon: squareIcon(Object.assign({}, pasteTemplate, { locked: true }), '__paste'),
+          interactive: false, keyboard: false, opacity: 0.65
+        }).addTo(map);
+      } else pasteGhost.setLatLng(e.latlng);
+    }
+    function handlePasteClick(e) {
+      if (!pasteTemplate || !window.isAdmin) return;
+      const tpl = pasteTemplate;
+      const payload = Object.assign({}, tpl, { updatedAt: firebase.database.ServerValue.TIMESTAMP });
+      const lbl = tpl.label || 'Без названия';
+      settleFactions([tpl.faction]).then(() => {
+        squaresRef.push(Object.assign({ lat: e.latlng.lat, lng: e.latlng.lng }, payload));
+        logAction('Скопировал квадрат', `«${lbl}»${tpl.faction ? ` (${tpl.faction})` : ''}`);
+      });
+      pasteCount++;
+      updatePasteHint();
+    }
+    function startPasteMode(tpl) {
+      stopPasteMode();
+      pasteTemplate = tpl;
+      pasteCount = 0;
+      map.on('click', handlePasteClick);
+      map.on('mousemove', handlePasteMove);
+      map.getContainer().style.cursor = 'copy';
+      updatePasteHint();
+    }
+    function stopPasteMode() {
+      if (!pasteTemplate && !pasteGhost) return;
+      pasteTemplate = null;
+      map.off('click', handlePasteClick);
+      map.off('mousemove', handlePasteMove);
+      if (pasteGhost) { map.removeLayer(pasteGhost); pasteGhost = null; }
+      map.getContainer().style.cursor = squareModeActive ? 'crosshair' : '';
+      pasteHintEl.classList.remove('visible');
+    }
+    document.getElementById('squareCopyBtn').onclick = () => {
+      if (!editingSquareId || !window.isAdmin) return;
+      const tpl = {
+        label: labelInput.value.trim(),
+        color: colorInput.value,
+        borderColor: borderColorInput.value,
+        borderWidth: Number(borderWidthInput.value),
+        size: Number(sizeInput.value),
+        opacity: Number(opacityInput.value) / 100,
+        locked: lockedInput.checked,
+        description: descriptionInput.value.trim(),
+        faction: factionInput.value || null,
+        type: typeInput.value || null,
+        materialsPerDay: Math.max(0, Math.floor(Number(materialsInput.value) || 0))
+      };
+      closeSquareEditor();
+      startPasteMode(tpl);
+    };
+    document.getElementById('pasteDoneBtn').onclick = stopPasteMode;
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pasteTemplate) stopPasteMode(); });
     document.getElementById('squareCloseBtn').onclick = closeSquareEditor;
     // ====================================================================
 
