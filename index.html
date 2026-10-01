@@ -15,11 +15,7 @@
       margin: 0;
       overflow: hidden;
       background: #111;
-      /* Запрещаем нативный жест масштабирования браузера (pinch-to-zoom) на
-         самой карте — без этого iOS/Android параллельно с зумом Leaflet ещё
-         и масштабируют весь DOM нативно, из-за чего квадраты визуально
-         "распухали" при сведении/разведении пальцев. Зум остаётся полностью
-         рабочим — его теперь обрабатывает только сам Leaflet (touchZoom). */
+
       touch-action: none;
       -ms-touch-action: none;
     }
@@ -35,7 +31,6 @@
     .layer-switcher button:hover { background:#2b2b2b; }
     .layer-switcher button.active { background:#fff; color:#111; }
 
-    /* Единый тёмный стиль полос прокрутки и ползунков под цвет интерфейса */
     * { scrollbar-width: thin; scrollbar-color: #4a4d6a transparent; }
     *::-webkit-scrollbar { width: 8px; height: 8px; }
     *::-webkit-scrollbar-track { background: transparent; }
@@ -89,11 +84,9 @@
       background: #5865F2; color: #fff; border-radius: 6px;
       padding: 2px 6px; font-size: 11px; font-weight: 600;
     }
-    /* Плашка "атака/защита в день" справа от ника — видна только тем, у кого
-       есть роль лидера/зама с настроенным лимитом (attacksPerDay/defensesPerDay).
-       Это отдельная плашка (со своим фоном), а не просто текст рядом с именем. */
+
     .leaflet-top.leaflet-left { display: flex; flex-direction: row; align-items: flex-start; flex-wrap: wrap; }
-    /* Плашки атаки / защиты / КД — в цвет плашки с ником (auth-widget) */
+
     .combat-status-badge {
       display: flex; align-items: center; gap: 8px;
       background: none; box-shadow: none; padding: 0; border-radius: 0;
@@ -115,7 +108,6 @@
     .combat-badge.hidden { display: none; }
     .combat-badge.full b { color: #ff5252; }
 
-    /* Плашки "ВЫ НАПАЛИ" (красная) / "НА ВАС НАПАЛИ" (оранжевая) — без таймера */
     .attack-banners {
       position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
       display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -147,7 +139,6 @@
     }
     .appeal-reply-form button { margin-top: 6px; border: 0; border-radius: 8px; padding: 7px 12px; background: #3b7d4f; color: #fff; cursor: pointer; font-size: 12px; }
 
-    /* Панель "Редактор" */
     .editor-panel {
       display: none; position: fixed; left: 10px; bottom: 112px; z-index: 1300;
       width: 310px; max-width: calc(100vw - 20px);
@@ -187,7 +178,6 @@
     .ed-msg.ok { color: #7fd99a; }
     .ed-msg.err { color: #ff8a8a; }
 
-    /* Уведомления */
     .toast-box {
       position: fixed; right: 12px; bottom: 56px; z-index: 1600;
       display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
@@ -207,7 +197,6 @@
       font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center;
     }
 
-    /* Обращения */
     .appeal-modal { width: 420px; }
     .appeal-modal textarea {
       width: 100%; box-sizing: border-box; min-height: 120px; resize: vertical;
@@ -240,7 +229,6 @@
     .appeal-actions button:hover { background: #3a3a42; }
     .admin-tabs { flex-wrap: wrap; }
 
-    /* Копирование квадрата */
     .paste-hint {
       display: none; position: fixed; left: 50%; top: 14px; transform: translateX(-50%);
       z-index: 1400; align-items: center; gap: 12px;
@@ -254,7 +242,6 @@
       background: #3ba55d; color: #fff; font-size: 12px; font-weight: 600; white-space: nowrap;
     }
 
-    /* Что нового */
     .whatsnew-ctl button {
       position: relative; display: flex; align-items: center; gap: 8px;
       border: 0; border-radius: 12px; padding: 10px 14px; cursor: pointer;
@@ -292,6 +279,7 @@
     .wn-msg.err { color: #ff8a8a; }
     .wn-msg.ok { color: #7fd99a; }
 
+    .map-square-wrap { position: relative; }
     .map-square {
       border-radius: 4px;
       box-shadow: none;
@@ -302,12 +290,10 @@
       align-items: center;
       justify-content: center;
       overflow: visible;
-      /* Явно запрещаем любые CSS-переходы/трансформации на самом квадрате —
-         это гарантирует, что он не "подрастает" визуально во время
-         зума/пинча, независимо от отключённой zoomAnimation на карте. */
       transition: none !important;
-      transform: none !important;
     }
+    .map-square-wrap > .map-square { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+    #squarePreview.map-square { transform: none !important; }
     .map-square-label {
       position: absolute;
       left: 50%; bottom: 100%;
@@ -329,15 +315,10 @@
       box-shadow: 0 4px 12px rgba(0,0,0,.4);
       z-index: 5;
     }
-    .map-square:hover .map-square-label {
+    .map-square-wrap:hover .map-square-label {
       opacity: 1;
     }
 
-    /* Общее меню внизу слева: кнопка "Квадрат" (только для админов) и
-       "История сражений" (для всех). Flex-контейнер с transition на
-       width/gap — при появлении/исчезновении кнопки (например, когда
-       у пользователя появляются/пропадают права редактирования квадратов)
-       меню плавно "растягивается" или "сжимается", а не дёргается скачком. */
     .bottom-left-menu {
       display: flex;
       flex-direction: row;
@@ -488,7 +469,6 @@
     #squareDeleteBtn:hover { background: #8f3131; }
     #squareDeleteBtn.hidden { display: none; }
 
-    /* ---- Модальные окна (инфо о квадрате / панель администратора) ---- */
     .modal-backdrop {
       display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55);
       z-index: 1400; backdrop-filter: blur(2px);
@@ -736,29 +716,50 @@
     .battle-history-item-date { font-size: 11px; color: #888; margin-top: 6px; text-align: right; }
     .battle-history-empty { color: #777; font-size: 13px; padding: 6px 0; }
 
-    /* Иконка фракции на квадрате — маленький кружок в углу квадрата. */
-    /* Таймер КД — плашка над верхним краем квадрата (только у атакованного квадрата). */
-    .square-cooldown {
-      position: absolute; left: 50%; top: 0; transform: translate(-50%, -60%);
-      display: none; align-items: center; gap: 3px; padding: 1px 6px; border-radius: 9px;
-      background: rgba(18,18,22,.94); border: 1px solid rgba(255,255,255,.25);
-      box-shadow: 0 2px 6px rgba(0,0,0,.55);
-      z-index: 8; pointer-events: none; white-space: nowrap; font-variant-numeric: tabular-nums;
+    .sq-timer {
+      position: absolute; left: 7%; right: 7%; bottom: 6%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,.28); color: #fff; font-weight: 800; line-height: 1.3;
+      border-radius: .3em; font-variant-numeric: tabular-nums; white-space: nowrap;
+      pointer-events: none; z-index: 6;
     }
-    .square-cooldown .square-fire { font-size: 10px; line-height: 1; }
-    .square-cooldown .square-cooldown-text { color: #fff; font-size: 10px; font-weight: 700; line-height: 1.3; }
-    .square-cooldown.pending { border-color: #ff8a3d; }
-    .square-cooldown.pending .square-fire { animation: fireFlicker .9s ease-in-out infinite alternate; }
-    .square-cooldown.defense { border-color: #5aa9ff; }
-    .square-cooldown.defense .square-cooldown-text { color: #cfe6ff; }
-    @keyframes fireFlicker { from { transform: scale(.9); } to { transform: scale(1.18); } }
+    .sq-timer.cd { background: rgba(18,20,30,.8); color: #cfe6ff; }
+    .sq-state-icon { top: 42% !important; opacity: 1 !important; }
+    .sq-state-icon.fight svg { animation: fireFlicker .9s ease-in-out infinite alternate; transform-origin: 50% 85%; }
+    @keyframes fireFlicker { from { transform: scale(.92); } to { transform: scale(1.1); } }
+    .map-square.link-center { outline: 3px solid #ffd23f; outline-offset: 2px; }
+    .map-square.link-child { outline: 3px solid #3ddcff; outline-offset: -3px; }
 
-    /* Иконка по центру квадрата (тип квадрата или фракция) и мини-значок фракции в углу */
+    .attack-popup {
+      display: none; position: fixed; z-index: 1700; width: 250px; box-sizing: border-box;
+      padding: 14px; border-radius: 12px; background: #2f2f31; color: #eee; font-size: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.55);
+    }
+    .attack-popup.visible { display: block; }
+    .attack-popup .ap-row { display: flex; align-items: center; gap: 8px; font-weight: 600; margin-bottom: 8px; }
+    .attack-popup .ap-row .ico { display: flex; width: 16px; height: 16px; color: #3ddc4f; flex-shrink: 0; }
+    .attack-popup .ap-row .ico svg { width: 100%; height: 100%; }
+    .attack-popup .ap-meta { color: #c9c9cc; margin: 6px 0; }
+    .attack-popup .ap-meta b { color: #fff; font-weight: 600; }
+    .attack-popup button {
+      display: block; width: 100%; box-sizing: border-box; border: 0; border-radius: 8px;
+      padding: 11px 10px; margin-top: 8px; font: inherit; font-weight: 600; color: #fff;
+      background: #4a4a4d; cursor: pointer;
+    }
+    .attack-popup button:hover { filter: brightness(1.12); }
+    .attack-popup button.cancel { background: #ee5a24; }
+    .attack-popup button.ghost { background: transparent; border: 1px solid #555; color: #aaa; font-weight: 500; padding: 7px 10px; }
+    .attack-popup .ap-edit label { display: block; color: #bbb; font-size: 12px; margin-top: 8px; }
+    .attack-popup .ap-edit input {
+      width: 100%; box-sizing: border-box; margin-top: 4px; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid #555; background: #1f1f21; color: #fff; font: inherit;
+    }
+    .attack-popup .ap-err { color: #ff8a8a; font-size: 12px; margin-top: 8px; }
+
     .square-center-icon { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; pointer-events: none; opacity: .95; z-index: 3; }
     .square-faction-badge { position: absolute; top: 2px; right: 2px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(0,0,0,.4); pointer-events: none; z-index: 4; }
     .square-editor-actions { flex-wrap: wrap; }
 
-    /* Группы ролей (выпадающие списки) */
     .role-group { margin-bottom: 10px; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; background: rgba(255,255,255,.02); }
     .role-group > summary { cursor: pointer; padding: 9px 12px; font-size: 12px; font-weight: 600; color: #ddd; list-style: none; user-select: none; }
     .role-group > summary::-webkit-details-marker { display: none; }
@@ -770,7 +771,6 @@
     .role-restore-btn { width: 100%; border: 0; border-radius: 8px; padding: 8px; background: #2b2b2d; color: #ddd; cursor: pointer; font-size: 11px; margin-top: 4px; }
     .role-restore-btn:hover { background: #3a3a3c; }
 
-    /* Пользователи с ролями: ID копируется по клику, роль меняется на месте */
     .assigned-users-list { max-height: 280px; }
     .assigned-user-row { flex-wrap: wrap; }
     .assigned-user-row .u-main { flex: 1; min-width: 110px; display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
@@ -780,7 +780,6 @@
     .u-id.copied { color: #6fd08c; background: rgba(59,165,93,.18); }
     .u-role-select { background: #26262a; border: 1px solid #3a3a3c; border-radius: 6px; color: #eee; font-size: 11px; padding: 4px; max-width: 150px; }
 
-    /* Журнал действий */
     .admin-logs-list { display: flex; flex-direction: column; gap: 6px; max-height: 340px; overflow-y: auto; }
     .log-row { background: #1c1c1e; border-radius: 8px; padding: 7px 9px; font-size: 12px; }
     .log-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 10px; color: #8a8a8f; }
@@ -789,7 +788,7 @@
     .log-action { color: #eee; margin-top: 3px; font-weight: 600; }
     .log-details { color: #9a9a9a; margin-top: 2px; word-break: break-word; }
     #adminLogsClearBtn { background: rgba(168,58,58,.25) !important; color: #e07070 !important; }
-  </style>
+</style>
 </head>
 <body>
   <div id="map" aria-label="Интерактивная карта"></div>
@@ -866,6 +865,7 @@
       <button id="squareCancelBtn">Отмена</button>
       <button id="squareCopyBtn" type="button" style="flex:1 1 100%;display:none;" title="Скопировать этот квадрат: затем кликайте по карте, куда поставить копии">📋 Копировать квадрат</button>
       <button id="squareNeutralBtn" type="button" style="flex:1 1 100%;" title="Снять фракцию и покрасить в серый (применится после «Сохранить»)">⚪ Сделать нейтральным</button>
+      <button id="squareLinkBtn" type="button" style="flex:1 1 100%;display:none;" title="Выбрать маленькие квадраты вокруг этого (проходные). Напасть на этот квадрат можно только при контроле 6 из 8 проходных">🔗 Привязать проходные</button>
     </div>
   </div>
 
@@ -877,6 +877,7 @@
       <button type="button" class="square-editor-close" id="squareInfoCloseBtn" aria-label="Закрыть">✕</button>
     </div>
     <div class="info-modal-faction" id="squareInfoFaction" style="display:none;"></div>
+    <div class="info-modal-faction" id="squareInfoLinks" style="display:none;"></div>
     <div class="info-modal-body">
       <p class="info-modal-desc" id="squareInfoDescription"></p>
     </div>
@@ -1077,6 +1078,8 @@
   </div>
 
   <div id="pasteHint" class="paste-hint"><span id="pasteHintText"></span><button type="button" id="pasteDoneBtn">✔ Готово</button></div>
+  <div id="linkHint" class="paste-hint"><span id="linkHintText"></span><button type="button" id="linkClearBtn" style="background:#4a4d5a;">🧹 Отвязать все</button><button type="button" id="linkDoneBtn">✔ Готово</button></div>
+  <div id="attackPopup" class="attack-popup"></div>
 
   <div id="whatsNewBackdrop" class="modal-backdrop"></div>
   <div id="whatsNewModal" class="info-modal wn-modal">
@@ -1134,34 +1137,16 @@
     };
     firebase.initializeApp(FIREBASE_CONFIG);
     const squaresRef = firebase.database().ref('squares');
-    // Записи истории сражений хранятся в узле "battleHistory" — каждая запись:
-    // { title, description, date (строка) или timestamp, createdAt }.
-    // ВАЖНО: как и с узлами "roles"/"userRoles", в правилах безопасности
-    // Firebase Realtime Database должна быть разрешена запись в узел
-    // "battleHistory" (например ".read": true, ".write": true для этого
-    // пути), иначе кнопка "Напасть" будет молча падать с ошибкой
-    // PERMISSION_DENIED и запись в историю не попадёт.
     const battleHistoryRef = firebase.database().ref('battleHistory');
-    // ==========================================================
 
-    // ================= РОЛИ И ПРАВА (панель администратора) =================
-    // Помимо жёстко заданных владельцев в ADMIN_DISCORD_IDS (у них всегда есть
-    // ВСЕ права и они не могут быть понижены), можно создавать гибкие роли с
-    // настраиваемыми правами и выдавать их любым пользователям по Discord ID
-    // прямо из панели администратора (шестерёнка рядом с ником после входа).
     const rolesRef = firebase.database().ref('roles');
     const userRolesRef = firebase.database().ref('userRoles');
-    // Узел с суточным расходом атак/защиты по каждой роли:
-    // roleUsage/{roleId}/{dateKey} = { attacks: N, defenses: N }.
-    // dateKey — дата по МСК вида "2026-09-28", поэтому счётчик сам
-    // "обнуляется" каждый день (просто появляется новый узел с датой).
     const roleUsageRef = firebase.database().ref('roleUsage');
     let rolesData = {};
     let userRolesData = {};
     let roleUsageData = {};
     let currentUser = null;
 
-    // ---- Иконки HUD (как на скрине) ----
     const ICONS = {
       swords: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"><path d="M4 4l13 13M20 4L7 17M15 19l4-4M9 19l-4-4"/></svg>',
       shield: '<svg viewBox="0 0 24 24"><path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z" fill="currentColor"/></svg>',
@@ -1173,14 +1158,10 @@
       return `${p(Math.floor(t / 3600))}:${p(Math.floor((t % 3600) / 60))}:${p(t % 60)}`;
     }
 
-    // ---- Временная роль супер админа (хранится на этом устройстве) ----
     const OWNER_ROLE_KEY = 'owner_acting_role';
     let ownerActingRoleId = null;
     try { ownerActingRoleId = localStorage.getItem(OWNER_ROLE_KEY) || null; } catch (e) {}
 
-    // ---- Обращения ----
-    // appeals/{id} = { ts, userId, userName, role, faction, text, status: 'new' | 'done' }
-    // В правилах Firebase Realtime Database нужно разрешить чтение/запись узла "appeals".
     const appealsRef = firebase.database().ref('appeals');
     let appealsData = {};
     let appealsLoaded = false;
@@ -1189,8 +1170,6 @@
     let appealsSubMode = null;
     let appealsSubUid = null;
     let editorPanelOpen = false;
-    // Элементы редактора объявлены заранее: applyCurrentPermissions может сработать
-    // при первой загрузке раньше, чем выполнится блок "РЕДАКТОР" ниже.
     const editorPanelEl = document.getElementById('editorPanel');
     const edFactionSel = document.getElementById('edFaction');
     const edRoleSel = document.getElementById('edRoleSelect');
@@ -1198,21 +1177,17 @@
     let edFactionInit = false;
     let edRoleSig = null;
 
-    // ---- Новые узлы Firebase (в правилах Realtime Database нужно разрешить
-    // чтение/запись для "adminLogs", "factionCooldowns" и
-    // "settings/deletedSpecialRoles", как и для остальных узлов) ----
     const adminLogsRef = firebase.database().ref('adminLogs');
-    const factionCooldownsRef = firebase.database().ref('factionCooldowns'); // {FACTION: {attackUntil}}
+    const factionCooldownsRef = firebase.database().ref('factionCooldowns');
     const specialRolesDeletedRef = firebase.database().ref('settings/deletedSpecialRoles');
     let adminLogsData = {};
     let factionCooldowns = {};
     let deletedSpecialRoles = {};
     let rolesLoaded = false;
     let deletedSpecialLoaded = false;
-    const NEUTRAL_COLOR = '#c4c2c2';  // нейтральный квадрат — светло-серый, как в игре
-    const SPECIAL_COLOR = '#4d4d50';  // особый квадрат (дом, травка…) — тёмно-серый
+    const NEUTRAL_COLOR = '#c4c2c2';
+    const SPECIAL_COLOR = '#4d4d50';
 
-    // Журнал действий: кто (имя, роль, Discord ID) и что сделал.
     function logAction(action, details) {
       if (!currentUser) return Promise.resolve();
       const perms = window.currentPerms || {};
@@ -1240,27 +1215,17 @@
       if (adminPanelOpen) renderAdminPanelContent();
     });
 
-    // Список фракций, которые можно назначить квадрату в редакторе, и из
-    // которых состоят предустановленные роли лидеров/замов.
     const FACTIONS = ['FIB', 'WN', 'SANG', 'SD', 'EMS', 'LSPD'];
 
-    // Иконки фракций — показываются маленьким кружком в углу квадрата,
-    // которому назначена соответствующая фракция.
     const FACTION_ICONS = {
       FIB: '🕵️', WN: '💰', SANG: '🩸', SD: '⭐', EMS: '🚑', LSPD: '👮'
     };
 
-    // Полные названия и игровые номера фракций (для команды /givematerials).
     const FACTION_NAMES = { LSPD: 'LSPD', EMS: 'EMS', SD: 'SD (Sheriff)', SANG: 'SANG', WN: 'Weazel News', FIB: 'FIB' };
     const FACTION_IDS = { LSPD: 1, EMS: 2, SD: 3, SANG: 4, WN: 6, FIB: 7 };
 
-    // Задержка на повторную атаку одного и того же квадрата — 1 час.
-    // (объявлено рано, до всех live-подписок Firebase, чтобы избежать
-    // обращения к константе до её инициализации).
     const ATTACK_COOLDOWN_MS = 60 * 60 * 1000;
 
-    // Дата по московскому времени в формате YYYY-MM-DD — ключ суточного
-    // лимита атак/защиты (сбрасывается сам собой в полночь МСК).
     function todayKey() {
       const parts = new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Europe/Moscow', year: 'numeric', month: '2-digit', day: '2-digit'
@@ -1269,10 +1234,6 @@
       return `${get('year')}-${get('month')}-${get('day')}`;
     }
 
-    // Предустановленные роли лидеров/замов фракций — создаются один раз (по
-    // фиксированным ключам, чтобы не задублировались) при первом заходе
-    // владельца сайта. Дальше их можно только менять (цвет, лимиты и т.д.)
-    // через панель администратора — они не пересоздаются повторно.
     const DEFAULT_LEADER_ROLES = {
       fib_leader:  { name: 'FIB LEADER',  color: '#3b82f6', faction: 'FIB',  rank: 'LEADER', icon: '🕵️' },
       fib_dep:     { name: 'FIB DEP',     color: '#93c5fd', faction: 'FIB',  rank: 'DEP',    icon: '🕵️' },
@@ -1288,13 +1249,10 @@
       lspd_dep:    { name: 'LSPD DEP',    color: '#a5e4fb', faction: 'LSPD', rank: 'DEP',    icon: '👮' }
     };
 
-    // Запускается только у владельца сайта (ADMIN_DISCORD_IDS) и только
-    // если роль с таким ключом ещё не создана — безопасно вызывать при
-    // каждом входе, ничего не перезатирает.
     function seedDefaultLeaderRoles() {
-      if (!rolesLoaded || !deletedSpecialLoaded) return; // ждём загрузки ролей и списка удалённых особых ролей
+      if (!rolesLoaded || !deletedSpecialLoaded) return;
       Object.keys(DEFAULT_LEADER_ROLES).forEach((key) => {
-        if (rolesData[key] || deletedSpecialRoles[key]) return; // уже создана (или намеренно удалена владельцем) — не трогаем (цвет/лимиты могли поменять вручную)
+        if (rolesData[key] || deletedSpecialRoles[key]) return;
         rolesRef.child(key).set({
           ...DEFAULT_LEADER_ROLES[key],
           manageSquares: false, deleteSquares: false, manageRoles: false, attackSquares: true,
@@ -1317,8 +1275,6 @@
       if (!user) return { manageSquares: false, deleteSquares: false, manageRoles: false, attackSquares: false, owner: false, roleId: null, roleName: null, roleColor: null, roleIcon: null, faction: null, rank: null, attacksPerDay: null, defensesPerDay: null };
       if (isOwnerId(user.id)) {
         const own = { manageSquares: true, deleteSquares: true, manageRoles: true, attackSquares: true, owner: true, roleId: null, roleName: null, roleColor: null, roleIcon: null, faction: null, rank: null, attacksPerDay: null, defensesPerDay: null, acting: false };
-        // Временная роль лидера: супер админ действует "от лица" выбранной роли
-        // (фракция, лимиты, КД, плашки), но все его права владельца сохраняются.
         const ar = ownerActingRoleId && rolesData[ownerActingRoleId];
         if (ar) {
           Object.assign(own, {
@@ -1350,9 +1306,6 @@
       };
     }
 
-    // Применяет текущие права к интерфейсу (кнопка квадрата, шестерёнка,
-    // возможность двигать/редактировать/удалять квадраты). Вызывается при
-    // входе, выходе и при любом live-изменении ролей/назначений в Firebase.
     function applyCurrentPermissions() {
       const perms = getPermissions(currentUser);
       window.isAdmin = perms.manageSquares;
@@ -1360,16 +1313,12 @@
       window.canManageRoles = perms.manageRoles;
       window.canAttackSquares = perms.attackSquares;
       window.currentPerms = perms;
-      // Право "Редактировать" (передача квадрата, перекраска, победитель) —
-      // владелец сайта и роли stadmin/admin.
       const roleKey = String(perms.roleName || '').trim().toLowerCase();
       const roleIdKey = String(perms.roleId || '').trim().toLowerCase();
-      // Редактирование квадрата — владелец + роли adm / admin / stadmin / stadm.
       const EDIT_ROLES = ['adm', 'admin', 'stadmin', 'stadm'];
       const TEST_ACCRUAL_ROLES = ['stadmin', 'stadm'];
       window.canEditSquareResult = !!(perms.owner || EDIT_ROLES.includes(roleKey) || EDIT_ROLES.includes(roleIdKey));
-      // Тестовое начисление материалов — супер админ и stadmin.
-      window.canModerateAppeals = window.canEditSquareResult; // обращения: супер админ + adm/admin/stadm/stadmin
+      window.canModerateAppeals = window.canEditSquareResult;
       window.canTestAccrual = !!(perms.owner || TEST_ACCRUAL_ROLES.includes(roleKey) || TEST_ACCRUAL_ROLES.includes(roleIdKey));
       if (!perms.manageSquares && typeof setSquareModeActive === 'function') setSquareModeActive(false);
       if (!perms.manageRoles && !window.canModerateAppeals && typeof closeAdminPanel === 'function') closeAdminPanel();
@@ -1400,9 +1349,6 @@
       return perms;
     }
 
-    // Показывает читаемую ошибку прямо в панели администратора, если запись
-    // в Firebase не удалась (чаще всего — не обновлены правила безопасности
-    // для узлов "roles"/"userRoles", см. комментарий в начале файла).
     function showAdminError(err) {
       const el = document.getElementById('adminPanelError');
       if (!el) { console.error(err); return; }
@@ -1417,9 +1363,6 @@
       showAdminError._t = setTimeout(() => { el.style.display = 'none'; }, 9000);
     }
 
-    // Если у пользователя уже есть выданная роль, при входе кэшируем его имя
-    // и аватар в userRoles — так в панели администратора видно не голый
-    // Discord ID, а реальное имя (узнаём его только когда человек сам зайдёт).
     function cacheUserRoleProfile(user) {
       const ur = userRolesData[user.id];
       if (!ur || isOwnerId(user.id)) return;
@@ -1447,13 +1390,10 @@
       if (adminPanelOpen && typeof renderCombatMgmtList === 'function') renderCombatMgmtList();
     });
 
-    // --- Панель администратора (модальное окно) ---
     let adminPanelOpen = false;
     const adminPanelEl = document.getElementById('adminPanelModal');
     const adminPanelBackdropEl = document.getElementById('adminPanelBackdrop');
 
-    // Переключение вкладок "Управление ролями" / "Атака и защита" внутри
-    // панели администратора.
     adminPanelEl.querySelectorAll('.admin-tab-btn').forEach((btn) => {
       btn.onclick = () => {
         adminPanelEl.querySelectorAll('.admin-tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
@@ -1470,7 +1410,6 @@
       const full = !!window.canManageRoles;
       if (!full && !window.canModerateAppeals) return;
       adminPanelOpen = true;
-      // ст адм / адм без права на роли видят в панели только вкладку "Обращения".
       adminPanelEl.querySelectorAll('.admin-tab-btn').forEach((b) => {
         b.style.display = (full || b.dataset.adminTab === 'appeals') ? '' : 'none';
       });
@@ -1487,7 +1426,6 @@
     document.getElementById('adminPanelCloseBtn').onclick = closeAdminPanel;
     adminPanelBackdropEl.onclick = closeAdminPanel;
 
-    // ---- Роли: группы "Созданные" и "Особые" (LEADER / DEP) ----
     let roleGroupOpen = { custom: true, special: false };
     const PERM_LABELS = { manageSquares: 'Добавление/правка', deleteSquares: 'Удаление', attackSquares: 'Атака', manageRoles: 'Роли' };
     function isSpecialRole(id) { return Object.prototype.hasOwnProperty.call(DEFAULT_LEADER_ROLES, id); }
@@ -1598,7 +1536,6 @@
           const id = btn.dataset.roleId;
           const special = isSpecialRole(id);
           const name = roleNameOf(id);
-          // Особые роли (LEADER/DEP) удалять может только супер админ.
           if (special && !(window.currentPerms && window.currentPerms.owner)) { showAdminError('особую роль может удалить только супер админ'); return; }
           if (special && !confirm(`Удалить особую роль «${name}»? Она не будет пересоздана автоматически (её можно вернуть кнопкой «Восстановить»).`)) return;
           const p = special
@@ -1612,7 +1549,6 @@
       const prevSel = select.value;
       select.innerHTML = roleOptionsHtml(prevSel, false);
 
-      // ---- Пользователи с ролями: ID копируется по клику, роль меняется в один клик ----
       const listEl = document.getElementById('assignedUsersList');
       const userIds = Object.keys(userRolesData);
       listEl.innerHTML = '';
@@ -1623,9 +1559,6 @@
         const ur = userRolesData[uid] || {};
         const row = document.createElement('div');
         row.className = 'assigned-user-row';
-        // Аватар и имя кэшируются в userRoles/{id}, когда человек сам заходит на
-        // сайт через Discord (по одному ID их получить нельзя). Пока не заходил —
-        // показываем "Ожидает входа".
         const hasProfile = !!ur.username;
         const avatarUrl = ur.avatar
           ? `https://cdn.discordapp.com/avatars/${uid}/${ur.avatar}.png?size=32`
@@ -1677,10 +1610,6 @@
       renderAdminLogs();
     }
 
-    // --- Вкладка "Атака и защита" панели администратора: список ролей с
-    // настроенным суточным лимитом, их текущий расход за сегодня (МСК) и
-    // кнопка "Сбросить" для обнуления счётчика конкретной роли вручную
-    // (например, если нужно вернуть возможность атаки/защиты раньше полуночи). ---
     function renderCombatMgmtList() {
       const listEl = document.getElementById('combatMgmtList');
       if (!listEl) return;
@@ -1717,13 +1646,6 @@
       });
     }
 
-
-    // ---- КД ----
-    // КД АТАКИ — на уровне фракции (factionCooldowns/{ФРАКЦИЯ}/attackUntil):
-    // после нападения следующая атака этой фракции — только после таймера.
-    // КД ЗАЩИТЫ — у каждого квадрата свой (attackAt/lastAttackedAt в самом
-    // квадрате): атакованный квадрат нельзя атаковать час, соседние квадраты
-    // той же фракции не затрагиваются.
     function fcRemaining(f, kind) {
       const until = (factionCooldowns[f] || {})[kind + 'Until'];
       const rem = until ? until - serverNow() : 0;
@@ -1767,7 +1689,6 @@
     }
     setInterval(() => { if (adminPanelOpen) tickFactionCdList(); }, 1000);
 
-    // Снимает КД (и назначенную атаку) у перечисленных квадратов.
     function clearSquareCooldowns(ids) {
       const upd = {};
       ids.forEach((id) => {
@@ -1793,7 +1714,6 @@
         .catch(showAdminError);
     };
 
-    // ---- Журнал действий ----
     let adminLogsSubscribed = false;
     function subscribeAdminLogs() {
       if (adminLogsSubscribed) return;
@@ -1826,16 +1746,12 @@
         </div>`).join('');
     }
     document.getElementById('adminLogsFilter').oninput = renderAdminLogs;
-    // Очищать журнал может только супер админ — иначе админы стирали бы свои следы.
     document.getElementById('adminLogsClearBtn').onclick = () => {
       if (!(window.currentPerms && window.currentPerms.owner)) return;
       if (!confirm('Очистить весь журнал действий? Это действие необратимо.')) return;
       adminLogsRef.remove().then(() => logAction('Очистил журнал действий')).catch(showAdminError);
     };
 
-    // "⚖ Выровнять лимиты ДЕП с ЛИДЕРАМИ" — для каждой фракции копирует
-    // attacksPerDay/defensesPerDay роли LEADER на роль(и) DEP той же
-    // фракции, чтобы у них был одинаковый суточный лимит.
     document.getElementById('syncDepLimitsBtn').onclick = () => {
       const byFactionLeader = {};
       Object.keys(rolesData).forEach((rid) => {
@@ -1887,19 +1803,13 @@
         .then(() => { logAction('Выдал роль', `ID ${id}: «${roleNameOf(roleId)}»`); idInput.value = ''; })
         .catch(showAdminError);
     };
-    // ==========================================================================
-    // Majestic Wiki map tile pattern:
-    // https://cdn-world.majestic-files.net/public/master/wiki/map/black/{z}/{x}/{y}.png
     const layers = {
       black: 'https://cdn-world.majestic-files.net/public/master/wiki/map/black/{z}/{x}/{y}.png',
       satellite: 'https://cdn-world.majestic-files.net/public/master/wiki/map/satellite/{z}/{x}/{y}.jpg'
     };
 
-    // Множитель размера квадратов в зависимости от текущего зума карты:
-    // на максимальном зуме (map.getMaxZoom()) квадрат равен ровно указанному
-    // в редакторе размеру, на каждом шаге зума "вниз" — уменьшается.
     function currentZoomScale() {
-      return Math.pow(1.5, map.getZoom() - map.getMaxZoom());
+      return Math.pow(2, map.getZoom() - map.getMaxZoom());
     }
 
     const map = L.map('map', {
@@ -1913,28 +1823,18 @@
       doubleClickZoom: true,
       scrollWheelZoom: true,
       dragging: true,
-      // touchZoom (встроенный pinch-зум Leaflet) отключён намеренно: во время
-      // самого жеста Leaflet плавно растягивает CSS-transform'ом всю панель
-      // карты (тайлы И маркеры) под пальцами, из-за чего квадраты временно
-      // "распухали" прямо в процессе сведения/разведения пальцев — это не
-      // лечится настройками zoomAnimation (она гасит анимацию только в
-      // момент отпускания). Вместо этого зум по пальцам реализован вручную
-      // ниже (см. "Кастомный pinch-zoom"): дискретными шагами через
-      // map.setZoomAround(), без промежуточного визуального масштабирования,
-      // поэтому размер квадратов остаётся неизменным на всём протяжении жеста.
       touchZoom: false,
       boxZoom: false,
       keyboard: true,
-      // zoomAnimation отключена намеренно: во время анимированного зума Leaflet
-      // временно масштабирует весь слой карты (включая иконки квадратов) через
-      // CSS-transform, из-за чего квадраты визуально "прыгали" в размере при
-      // приближении. Без анимации зум происходит мгновенно, но квадраты всегда
-      // остаются ровно в заданном пиксельном размере.
       zoomAnimation: false,
-      // Доп. страховка от той же проблемы: явно отключаем отдельную анимацию
-      // маркеров при зуме (актуально в первую очередь для pinch-zoom на
-      // мобильных, где Leaflet может анимировать маркеры отдельно от тайлов).
       markerZoomAnimation: false
+    });
+
+    L.Marker.include({
+      update: function () {
+        if (this._icon && this._map) this._setPos(this._map.latLngToLayerPoint(this._latlng));
+        return this;
+      }
     });
 
     const tileOptions = {
@@ -1949,11 +1849,6 @@
 
     let activeLayer = L.tileLayer(layers.black, tileOptions).addTo(map);
 
-    // --- Автоопределение реального размера карты по сетке тайлов ---
-    // Мы не знаем точные размеры исходной карты, поэтому "прощупываем"
-    // тайлы на базовом зуме: пробуем грузить картинки по возрастающим
-    // индексам X и Y, пока они существуют, и так находим границы сетки.
-
     function tileExists(url) {
       return new Promise((resolve) => {
         const img = new Image();
@@ -1967,7 +1862,6 @@
       return template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
     }
 
-    // Экспоненциальный + бинарный поиск последнего существующего индекса
     async function findMaxIndex(makeUrl) {
       if (!(await tileExists(makeUrl(0)))) return -1;
       let lo = 0, hi = 1;
@@ -1988,8 +1882,6 @@
       const maxY = await findMaxIndex(y => tileUrl(layers.black, baseZoom, 0, y));
 
       if (maxX < 0 || maxY < 0) {
-        // Не удалось определить сетку (например, из-за CORS/сети) —
-        // оставляем карту как есть, без жёстких границ.
         return;
       }
 
@@ -1998,7 +1890,6 @@
       const pxWidth = cols * tileOptions.tileSize;
       const pxHeight = rows * tileOptions.tileSize;
 
-      // Переводим пиксельные границы сетки в координаты Leaflet (CRS.Simple)
       const southWest = map.unproject([0, pxHeight], baseZoom);
       const northEast = map.unproject([pxWidth, 0], baseZoom);
       const bounds = L.latLngBounds(southWest, northEast);
@@ -2007,26 +1898,17 @@
       map.setMaxBounds(bounds);
       map.options.maxBoundsViscosity = 1.0;
 
-      // Начальный зум на 1 уровень ближе, чем минимальный (меньше чёрных полос по краям)
       const initialZoom = Math.min(baseZoom + 1, map.getMaxZoom());
       map.setView(center, initialZoom);
     }
 
     detectExtentAndLockCamera();
 
-    // ================= Кастомный pinch-zoom (без "распухания" квадратов) ==
-    // Родной touchZoom у Leaflet выключен выше. Здесь он заменён на ручную
-    // обработку жеста двумя пальцами: считаем расстояние между пальцами и,
-    // как только оно меняется на заданный коэффициент, сразу переключаем
-    // зум на соседний уровень через map.setZoomAround() — мгновенно (т.к.
-    // zoomAnimation:false), без промежуточного CSS-масштабирования панели.
-    // За один длинный жест зум может переключиться на несколько уровней —
-    // после каждого шага точка отсчёта расстояния сбрасывается.
     (function setupCustomPinchZoom() {
       const container = map.getContainer();
       let pinchStartDist = null;
       let pinchMid = null;
-      const STEP = 1.3; // во сколько раз должно измениться расстояние между пальцами для шага зума
+      const STEP = 1.3;
 
       function dist(t0, t1) {
         const dx = t0.clientX - t1.clientX;
@@ -2047,7 +1929,7 @@
 
       container.addEventListener('touchmove', (e) => {
         if (e.touches.length !== 2 || pinchStartDist == null) return;
-        e.preventDefault(); // не даём браузеру одновременно скроллить/зумить нативно
+        e.preventDefault();
         const d = dist(e.touches[0], e.touches[1]);
         const ratio = d / pinchStartDist;
         const latlng = map.containerPointToLatLng(pinchMid);
@@ -2068,9 +1950,7 @@
       container.addEventListener('touchend', resetPinch, { passive: true });
       container.addEventListener('touchcancel', resetPinch, { passive: true });
     })();
-    // ========================================================================
 
-    // ================= DISCORD LOGIN (логика) =================
     function discordRedirectUri() {
       return window.location.origin + window.location.pathname;
     }
@@ -2089,7 +1969,6 @@
       if (user.avatar) {
         return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
       }
-      // Аватар по умолчанию, если пользователь его не поставил
       const fallbackIndex = (user.discriminator && user.discriminator !== '0')
         ? Number(user.discriminator) % 5
         : Number(BigInt(user.id) >> 22n) % 6;
@@ -2139,11 +2018,6 @@
       applyCurrentPermissions();
     }
 
-    // Обновляет только бейдж роли рядом с ником, не перерисовывая весь
-    // виджет входа. Раньше бейдж считался один раз внутри renderAuthWidget —
-    // если роли/назначения из Firebase подгружались уже ПОСЛЕ первого рендера
-    // (обычный race condition при входе), бейдж так и оставался пустым до
-    // перезахода. Теперь он синхронизируется при каждом обновлении прав.
     function updateRoleBadge(perms) {
       const badgeEl = authWidgetEl && authWidgetEl.querySelector('#userRoleBadge');
       if (!badgeEl) return;
@@ -2166,11 +2040,6 @@
       }
     }
 
-    // Плашки "⚔ атака" и "🛡 защита" слева от ника: показывают, сколько раз
-    // роль текущего пользователя уже атаковала/получала защиту сегодня, из
-    // суточного лимита, заданного админом в панели ("0/2"). Если у роли
-    // лимит не задан (∞) — плашка скрыта, чтобы не мешать тем, у кого нет
-    // ограничений (обычные роли без faction/лимитов).
     function updateCombatBadges() {
       const wrapEl = combatStatusBadgeEl;
       if (!wrapEl) return;
@@ -2180,7 +2049,6 @@
       const cdEl = wrapEl.querySelector('#combatCdBadge');
       const defCdEl = wrapEl.querySelector('#combatDefCdBadge');
       const setTxt = (el, txt) => { const b = el.querySelector('b'); if (b && b.textContent !== txt) b.textContent = txt; };
-      // usage берём строго по сегодняшней (МСК) дате — счётчик сам обнуляется в 00:00 МСК.
       const usage = (perms.roleId && roleUsageData[perms.roleId] && roleUsageData[perms.roleId][todayKey()]) || {};
       let any = false;
       if (currentUser && perms.attacksPerDay != null) {
@@ -2195,7 +2063,6 @@
         defenseEl.classList.toggle('full', used >= perms.defensesPerDay);
         defenseEl.classList.remove('hidden'); any = true;
       } else defenseEl.classList.add('hidden');
-      // Таймеры КД — отдельные плашки, только пока КД реально идёт (после нападения).
       cdEl.classList.add('hidden'); defCdEl.classList.add('hidden');
       if (currentUser && perms.faction) {
         try {
@@ -2213,8 +2080,6 @@
       try { updateAttackBanners(); } catch (e) {}
     }
 
-    // "ВЫ НАПАЛИ" (красная) — ролям фракции-нападающей; "НА ВАС НАПАЛИ" (оранжевая) —
-    // ролям фракции, чей квадрат атакуют. Без таймера: пока идёт подготовка атаки.
     function bannerHtml(kind, text) {
       return `<div class="attack-banner ${kind}"><span class="ico">${kind === 'attack' ? ICONS.swords : ICONS.shield}</span><span class="txt">${text}</span></div>`;
     }
@@ -2242,22 +2107,12 @@
       if (box._last !== html) { box.innerHTML = html; box._last = html; }
     }
 
-    // Раз в минуту пересчитываем плашку и КД-таймеры квадратов — это
-    // покрывает два момента, которые событие Firebase само по себе не
-    // ловит: наступление полуночи МСК (счётчик "0/1" должен обнулиться без
-    // перезахода) и естественное истечение часового КД атаки на квадрате.
     setInterval(() => {
       if (typeof updateCombatBadges === 'function') updateCombatBadges();
       if (adminPanelOpen && typeof renderCombatMgmtList === 'function') renderCombatMgmtList();
     }, 60 * 1000);
 
     async function initDiscordAuth() {
-      // Токен хранится в localStorage (а не sessionStorage), поэтому вход
-      // сохраняется между визитами — при следующем открытии сайта (даже
-      // после перезапуска браузера) пользователь остаётся авторизован, пока
-      // токен, выданный Discord, не истечёт или его не отзовут явным
-      // "Выйти". Если мы только что вернулись от Discord — токен лежит в
-      // хэше ссылки.
       const hashParams = new URLSearchParams(window.location.hash.slice(1));
       const tokenFromRedirect = hashParams.get('access_token');
       if (tokenFromRedirect) {
@@ -2287,8 +2142,6 @@
     };
     authControl.addTo(map);
 
-    // Плашка "атака/защита в день" — отдельный элемент правее ника (не
-    // внутри самой плашки с аватаркой/кнопкой "Выйти"), см. .leaflet-top.leaflet-left.
     let combatStatusBadgeEl = null;
     const combatBadgeControl = L.control({ position: 'topleft' });
     combatBadgeControl.onAdd = function () {
@@ -2306,7 +2159,6 @@
     combatBadgeControl.addTo(map);
 
     initDiscordAuth();
-    // ============================================================
 
     const switcher = L.control({position:'topright'});
     switcher.onAdd = function() {
@@ -2317,7 +2169,6 @@
     };
     switcher.addTo(map);
 
-    // Кнопка "Обращение" — сверху справа (под переключателем слоёв), видна вошедшим игрокам.
     const appealTopControl = L.control({ position: 'topright' });
     appealTopControl.onAdd = function () {
       const div = L.DomUtil.create('div', 'layer-switcher appeal-top');
@@ -2329,10 +2180,6 @@
     };
     appealTopControl.addTo(map);
 
-    // Единое меню внизу слева: кнопка "Квадрат" (видна только тем, у кого
-    // есть право редактирования квадратов) и "История сражений" (видна всем).
-    // Контейнер — гибкий flex-ряд, поэтому при появлении/скрытии кнопки
-    // "Квадрат" (через класс hidden-btn) меню плавно расширяется/сужается.
     const bottomLeftMenu = L.control({ position: 'bottomleft' });
     let battleHistoryBtnEl = null;
     bottomLeftMenu.onAdd = function () {
@@ -2354,7 +2201,6 @@
     document.getElementById('battleHistoryBtn').onclick = () => openBattleHistory();
     document.getElementById('statsBtn').onclick = () => openStats();
 
-    // ================= РЕДАКТОР / ВРЕМЕННАЯ РОЛЬ / ОБРАЩЕНИЯ =================
     function edMsg(text, isErr) {
       edMsgEl.textContent = text || '';
       edMsgEl.className = 'ed-msg ' + (text ? (isErr ? 'err' : 'ok') : '');
@@ -2429,7 +2275,6 @@
     };
     document.getElementById('edRoleDropBtn').onclick = () => { setOwnerActingRole(null); edMsg('Временная роль снята'); };
 
-    // +1 / −1 к суточному счётчику атак или защиты — у всех ролей выбранной фракции.
     function adjustFactionCounter(f, kind, delta) {
       const roleIds = Object.keys(rolesData).filter((rid) => rolesData[rid] && rolesData[rid].faction === f);
       if (!roleIds.length) return Promise.reject(new Error('У фракции ' + f + ' нет ролей'));
@@ -2480,7 +2325,6 @@
     document.getElementById('edSquareBtn').onclick = () => toggleSquareMode();
     document.getElementById('edAppealBtn').onclick = () => openAppealModal();
 
-    // ---- Уведомления (тосты) ----
     function showToast(title, body, onClick) {
       const box = document.getElementById('toastBox');
       const el = document.createElement('div');
@@ -2502,8 +2346,7 @@
       } catch (e) {}
     }
 
-    // ---- Обращения ----
-    const APPEAL_COOLDOWN_MS = 10 * 60 * 1000; // КД между обращениями одного игрока
+    const APPEAL_COOLDOWN_MS = 10 * 60 * 1000;
     const appealModalEl = document.getElementById('appealModal');
     const appealBackdropEl = document.getElementById('appealBackdrop');
     const appealTextEl = document.getElementById('appealText');
@@ -2513,7 +2356,7 @@
     const appealReplyDraft = {};
 
     function appealCooldownLeft() {
-      if (!currentUser || isOwnerId(currentUser.id)) return 0; // супер админа КД не касается
+      if (!currentUser || isOwnerId(currentUser.id)) return 0;
       let last = 0;
       try { last = Number(localStorage.getItem('appeal_last_' + currentUser.id)) || 0; } catch (e) {}
       Object.keys(appealsData).forEach((k) => {
@@ -2596,7 +2439,6 @@
       });
     };
 
-    // ---- "Мои обращения" + уведомление игрока об ответе ----
     function myAppealsList(limit) {
       if (!currentUser) return [];
       const list = Object.keys(appealsData).filter((k) => appealsData[k] && appealsData[k].userId === currentUser.id)
@@ -2640,7 +2482,6 @@
       if (changed) setSeenReplies(seen);
     }
 
-    // ---- Уведомления модераторам ----
     function notifyNewAppeal(a) {
       const who = a.userName || 'Игрок';
       const snippet = String(a.text || '').slice(0, 160);
@@ -2669,8 +2510,6 @@
       if (tab) tab.textContent = n ? ` (${n})` : '';
     }
 
-    // Модераторы (супер админ, adm, admin, stadm, stadmin) читают все обращения,
-    // остальные игроки — только свои (для "Мои обращения" и уведомления об ответе).
     function detachAppeals() {
       if (appealsSubQuery && appealsSubHandler) appealsSubQuery.off('value', appealsSubHandler);
       appealsSubQuery = null; appealsSubHandler = null; appealsSubMode = null; appealsSubUid = null;
@@ -2795,9 +2634,6 @@
     };
     document.getElementById('appealBtn').onclick = () => openAppealModal();
     try { syncAppealsSubscription(); } catch (e) {}
-    // ================= ЧТО НОВОГО =================
-    // Firebase: changelog/{id} = { ts, version, text, byId, byName, editedAt? }, changelogMeta/build = "beta 0.1.1".
-    // В правилах Realtime Database нужно разрешить чтение/запись узлов "changelog" и "changelogMeta".
     const APP_BUILD_DEFAULT = 'beta 0.1.1';
     const changelogRef = firebase.database().ref('changelog');
     const changelogMetaRef = firebase.database().ref('changelogMeta');
@@ -2951,8 +2787,7 @@
       };
     },0);
 
-    // ================= КВАДРАТЫ (общие метки на карте) =================
-    const squareMarkers = {}; // id -> L.marker
+    const squareMarkers = {};
 
     function hexToRgba(hex, alpha) {
       let h = (hex || '#ff5252').replace('#', '');
@@ -2964,7 +2799,6 @@
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
 
-    // ================= ИКОНКИ (нарисованы вручную, SVG 24×24, белые) =================
     function starPts(cx, cy, ro, ri, n) {
       n = n || 5; const p = [];
       for (let i = 0; i < n * 2; i++) {
@@ -2979,14 +2813,12 @@
     const weedBlades = [[0, 7.5], [-34, 6.2], [34, 6.2], [-66, 4.6], [66, 4.6]]
       .map(([a, ry]) => `<ellipse cx="12" cy="${17 - ry}" rx="1.5" ry="${ry}" transform="rotate(${a} 12 17)"/>`).join('');
     const ICON_PATHS = {
-      // --- фракции ---
-      LSPD: `<path d="M12 2 20 5v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z"/><polygon fill="${DK}" points="${starPts(12, 11.6, 5, 2.2)}"/>`,                              // значок полиции
-      SD: `<polygon points="${starPts(12, 12.6, 7.6, 3.6)}"/>${sdTips}`,                                                                                              // звезда шерифа
-      FIB: `<path ${ST()} d="M2 12C5 6.5 19 6.5 22 12 19 17.5 5 17.5 2 12z"/><circle cx="12" cy="12" r="3.3"/>`,                                                       // всевидящий глаз
-      EMS: `<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>`,                                                                                                               // медицинский крест
-      WN: `<rect x="8.5" y="2" width="7" height="12" rx="3.5"/><path ${ST()} d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/>`,                                              // микрофон журналиста
-      SANG: `<path d="M3 15C3 8.5 7 4.5 12 4.5S21 8.5 21 15z"/><rect x="2" y="15" width="20" height="3.2" rx="1.6"/><polygon fill="${DK}" points="${starPts(12, 10.6, 3.4, 1.5)}"/>`, // каска
-      // --- особые квадраты ---
+      LSPD: `<path d="M12 2 20 5v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z"/><polygon fill="${DK}" points="${starPts(12, 11.6, 5, 2.2)}"/>`,
+      SD: `<polygon points="${starPts(12, 12.6, 7.6, 3.6)}"/>${sdTips}`,
+      FIB: `<path ${ST()} d="M2 12C5 6.5 19 6.5 22 12 19 17.5 5 17.5 2 12z"/><circle cx="12" cy="12" r="3.3"/>`,
+      EMS: `<path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z"/>`,
+      WN: `<rect x="8.5" y="2" width="7" height="12" rx="3.5"/><path ${ST()} d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/>`,
+      SANG: `<path d="M3 15C3 8.5 7 4.5 12 4.5S21 8.5 21 15z"/><rect x="2" y="15" width="20" height="3.2" rx="1.6"/><polygon fill="${DK}" points="${starPts(12, 10.6, 3.4, 1.5)}"/>`,
       house: `<path d="M12 3 2 12h3v9h5.5v-6h3v6H19v-9h3z"/>`,
       weed: `${weedBlades}<path ${ST()} d="M12 17v5"/>`,
       lab: `<path d="M9 2h6v2h-1v5.2l5.4 9.3A2 2 0 0 1 17.7 21H6.3a2 2 0 0 1-1.7-2.5L10 9.2V4H9z"/><path fill="${DK}" d="M8.2 15h7.6l1.4 2.5H6.8z"/>`,
@@ -3000,9 +2832,10 @@
       car: `<path d="M5.3 10.6 6.9 6.1A2 2 0 0 1 8.8 4.8h6.4a2 2 0 0 1 1.9 1.3l1.6 4.5A2 2 0 0 1 20.5 12.6V17h-2v2h-3v-2h-7v2h-3v-2h-2v-4.4a2 2 0 0 1 1.8-2z"/><circle fill="${DK}" cx="7.2" cy="14" r="1.4"/><circle fill="${DK}" cx="16.8" cy="14" r="1.4"/>`,
       clothes: `<path d="M8.5 3 2 6l2.4 5 2.6-1.1V21h10V9.9L19.6 11 22 6l-6.5-3a3.5 3.5 0 0 1-7 0z"/>`,
       barber: `<circle ${ST()} cx="6" cy="6" r="2.6"/><circle ${ST()} cx="6" cy="18" r="2.6"/><path ${ST()} d="M8 7.6 21 17M8 16.4 21 7"/>`,
-      gun: `<path d="M2.5 7h15.2l1 2.6h2.8V13h-6.9l-.9 5.2a1 1 0 0 1-1 .8H9.6a1 1 0 0 1-1-1.2L9.4 13H2.5z"/>`
+      gun: `<path d="M2.5 7h15.2l1 2.6h2.8V13h-6.9l-.9 5.2a1 1 0 0 1-1 .8H9.6a1 1 0 0 1-1-1.2L9.4 13H2.5z"/>`,
+      shield: `<path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10-4.6-1.4-8-5-8-10v-6z"/><path fill="#ee5a24" d="M12 5.3l5.2 2v4.2c0 3.3-2.2 5.9-5.2 7-3-1.1-5.2-3.7-5.2-7V7.3z"/>`,
+      fire: `<path d="M12 2c.6 3.2-1.6 4.8-3.2 7C7.4 10.8 6.2 12.4 6.2 14.6a5.8 5.8 0 0 0 11.6 0c0-2.2-1-3.8-2.1-5.1-.3 1.3-1 2.1-2.1 2.4.8-3.2-.1-7.200-1.600-9.900z"/><path fill="#ee5a24" d="M12 12.400c-1.800 1.300-2.600 2.500-2.600 3.800a2.600 2.600 0 0 0 5.200 0c0-1-.5-1.800-1.200-2.600-.2.600-.6.900-1.400 1 .3-1.200.1-2.200 0-2.200z"/><rect x="3" y="20.800" width="18" height="1.700" rx=".8"/>`
     };
-    // Типы особых квадратов (выбираются в редакторе квадрата).
     const SPECIAL_TYPES = {
       house: 'Дом', weed: 'Травка', lab: 'Лаборатория', factory: 'Завод', shop: 'Магазин', fuel: 'Заправка',
       tower: 'Вышка связи', satellite: 'Спутник', garage: 'Гараж / бункер', bank: 'Банк', car: 'Автосалон',
@@ -3014,7 +2847,6 @@
       const s = typeof px === 'number' ? px + 'px' : px;
       return `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="#fff" style="display:block;overflow:visible">${inner}</svg>`;
     }
-    // Что рисовать в центре: тип квадрата главнее фракции.
     function centerIconKey(data) {
       if (!data) return null;
       if (data.type && ICON_PATHS[data.type]) return data.type;
@@ -3022,46 +2854,77 @@
       return null;
     }
 
+    const ATTACK_COLOR = '#ee5a24';
+    const FIGHT_DURATION_MS = 20 * 60 * 1000;
+    let linkMode = null;
+
+    function squareVisualState(data) {
+      const st = squareAttackState(data || {});
+      if (!st) return null;
+      if (st.state === 'pending') return { kind: 'pending', remaining: st.remaining };
+      const sinceStart = ATTACK_COOLDOWN_MS - st.remaining;
+      if (sinceStart < FIGHT_DURATION_MS) return { kind: 'fight', remaining: FIGHT_DURATION_MS - sinceStart };
+      return { kind: 'cd', remaining: st.remaining };
+    }
+    function visKey(data) {
+      const v = squareVisualState(data);
+      return v ? v.kind : '';
+    }
+    function linkRole(id) {
+      if (!linkMode) return '';
+      if (id === linkMode.bigId) return 'link-center';
+      const d = squareData[id];
+      return d && d.linkedTo === linkMode.bigId ? 'link-child' : '';
+    }
+
     function squareIcon(data, id) {
       const baseSize = (data && data.size) || 20;
-      const size = Math.max(6, Math.round(baseSize * currentZoomScale()));
-      // По умолчанию — без рамки, как в игре (рамка только если задана в редакторе).
+      const scale = currentZoomScale();
+      const vis = baseSize * scale;
       const borderWidth = (data && data.borderWidth != null) ? data.borderWidth : 0;
       const borderColor = (data && data.borderColor) || '#ffffff';
       const opacity = (data && data.opacity != null) ? data.opacity : 1;
       const isSpecial = !!(data && data.type);
-      const color = (data && data.color) || (isSpecial ? SPECIAL_COLOR : '#ff5252');
-      const radius = Math.max(3, Math.round(size * 0.12));
+      const vs = squareVisualState(data);
+      const hot = !!vs && (vs.kind === 'pending' || vs.kind === 'fight');
+      const color = hot ? ATTACK_COLOR : ((data && data.color) || (isSpecial ? SPECIAL_COLOR : '#ff5252'));
+      const radius = Math.max(2, Math.round(baseSize * 0.12));
       const label = (data && data.label) ? escapeHtml(data.label) : '';
       const labelHtml = label ? `<span class="map-square-label">${label}</span>` : '';
-      // Иконка в центре (если квадрат не слишком мелкий) + мини-значок фракции
-      // в углу у особых квадратов, которые принадлежат фракции.
-      const key = centerIconKey(data);
-      const iconPx = Math.round(size * 0.52);
-      const centerHtml = (key && iconPx >= 8) ? `<span class="square-center-icon" title="${escapeHtml(isSpecial ? (SPECIAL_TYPES[data.type] || '') : data.faction)}">${iconSvg(key, iconPx)}</span>` : '';
-      const badgePx = Math.round(size * 0.3);
-      const badgeHtml = (isSpecial && data.faction && ICON_PATHS[data.faction] && badgePx >= 9)
+      let centerHtml = '';
+      if (hot) {
+        if (vis >= 14) {
+          const px = Math.round(baseSize * 0.5);
+          centerHtml = `<span class="square-center-icon sq-state-icon ${vs.kind}">${iconSvg(vs.kind === 'pending' ? 'shield' : 'fire', px)}</span>`;
+        }
+      } else {
+        const key = centerIconKey(data);
+        const iconPx = Math.round(baseSize * 0.52);
+        if (key && iconPx * scale >= 7) {
+          centerHtml = `<span class="square-center-icon" title="${escapeHtml(isSpecial ? (SPECIAL_TYPES[data.type] || '') : data.faction)}">${iconSvg(key, iconPx)}</span>`;
+        }
+      }
+      const badgePx = Math.round(baseSize * 0.3);
+      const badgeHtml = (!hot && isSpecial && data.faction && ICON_PATHS[data.faction] && badgePx * scale >= 9)
         ? `<span class="square-faction-badge" style="width:${badgePx + 2}px;height:${badgePx + 2}px;" title="${escapeHtml(data.faction)}">${iconSvg(data.faction, badgePx - 1)}</span>` : '';
-      // Плашка таймера над квадратом — текст/видимость обновляет
-      // updateCooldownTimers() раз в секунду, без пересоздания иконки.
-      const cooldownHtml = `<span class="square-cooldown"><span class="square-fire">🔥</span><span class="square-cooldown-text"></span></span>`;
+      const timerPx = Math.max(6, Math.round(baseSize * 0.2));
+      const timerHtml = (vs && vis >= 18)
+        ? `<span class="sq-timer${vs.kind === 'cd' ? ' cd' : ''}" style="font-size:${timerPx}px;">${formatMMSS(vs.remaining)}</span>` : '';
+      const cls = ['map-square', linkRole(id)].filter(Boolean).join(' ');
       return L.divIcon({
         className: '',
-        html: `<div class="map-square" style="width:${size}px;height:${size}px;border-radius:${radius}px;background:${hexToRgba(color, opacity)};border:${borderWidth}px solid ${borderColor};">${centerHtml}${badgeHtml}${labelHtml}${cooldownHtml}</div>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size / 2]
+        html: `<div class="map-square-wrap" style="width:${vis}px;height:${vis}px;"><div class="${cls}" style="width:${baseSize}px;height:${baseSize}px;transform:scale(${scale});border-radius:${radius}px;background:${hexToRgba(color, hot ? 1 : opacity)};border:${hot ? 0 : borderWidth}px solid ${borderColor};">${centerHtml}${badgeHtml}${timerHtml}</div>${labelHtml}</div>`,
+        iconSize: [vis, vis],
+        iconAnchor: [vis / 2, vis / 2]
       });
     }
 
-    let pasteTemplate = null; // режим копирования квадрата: шаблон, пока он активен
+    let pasteTemplate = null;
     let pasteGhost = null;
     let pasteCount = 0;
-    let squareModeActive = false; // редактирование/добавление квадратов включается только этой кнопкой
-    const squareData = {}; // id -> последние данные с сервера (используется для блокировки, инфо-панели и т.д.)
+    let squareModeActive = false;
+    const squareData = {};
 
-    // По умолчанию квадрат считается заблокированным (locked !== false), пока
-    // админ явно не разблокирует его в редакторе — это защищает от случайных
-    // сдвигов при обычных кликах.
     function isSquareLocked(data) {
       return !data || data.locked !== false;
     }
@@ -3072,28 +2935,24 @@
         marker = L.marker([data.lat, data.lng], {
           icon: squareIcon(data, id),
           draggable: !!window.isAdmin && squareModeActive && !isSquareLocked(data),
-          bubblingMouseEvents: false // клик по квадрату не должен ещё и "проваливаться" в карту
+          bubblingMouseEvents: false
         }).addTo(map);
-        // Подпись квадрата теперь отображается не отдельным всплывающим
-        // тултипом Leaflet, а прямо внутри самого квадрата (см. squareIcon) —
-        // текст появляется по наведению за счёт CSS (.map-square:hover .map-square-label).
 
+        marker._visState = visKey(data);
         marker.on('click', () => {
-          if (pasteTemplate) return; // во время копирования клики по квадратам не открывают редактор
+          if (pasteTemplate) return;
+          if (linkMode) { toggleLink(id); return; }
           const current = squareData[id] || {};
           if (window.isAdmin && squareModeActive) {
-            // Если этот же квадрат уже открыт в редакторе — не перезаписываем
-            // несохранённые изменения его настроек повторным открытием.
             if (editingSquareId === id) return;
             openSquareEditor(id, marker.getLatLng(), current);
           } else {
-            openSquareInfo(id, current);
+            const vk = visKey(current);
+            if (vk === 'pending' || vk === 'fight') openAttackPopup(id, marker);
+            else { closeAttackPopup(); openSquareInfo(id, current); }
           }
         });
 
-        // Обновляем позицию в реальном времени прямо во время перетаскивания
-        // (с небольшим троттлингом), а не только по его завершении — так все
-        // остальные посетители видят перемещение квадрата live.
         marker.on('dragstart', () => { marker._localDragging = true; });
         let dragThrottle = null;
         marker.on('drag', () => {
@@ -3109,15 +2968,10 @@
         });
         squareMarkers[id] = marker;
       } else {
-        // ВАЖНО: пока сам пользователь тащит этот квадрат мышью, игнорируем
-        // приходящее из Firebase эхо собственных же промежуточных обновлений
-        // позиции. Раньше setIcon()/setLatLng() здесь пересоздавали DOM-иконку
-        // прямо во время активного перетаскивания и рассинхронизировали её с
-        // внутренним обработчиком drag у Leaflet — визуально это выглядело
-        // так, будто после разблокировки квадрат "багует" и перестаёт двигаться.
         if (marker._localDragging) return;
         marker.setLatLng([data.lat, data.lng]);
         marker.setIcon(squareIcon(data, id));
+        marker._visState = visKey(data);
       }
     }
 
@@ -3131,14 +2985,6 @@
       });
     }
 
-    // Онлайн-таймер обратного отсчёта КД атаки прямо на квадрате (вида
-    // "58:12") и состояние отдельной кнопки "Напасть" на квадрате —
-    // обновляются раз в секунду, без пересоздания иконки (иначе перетаскивание
-    // и hover-состояние квадрата будут дёргаться).
-    // Состояние атаки на квадрате:
-    //  pending  — атака назначена на attackAt, идёт отсчёт до начала;
-    //  cooldown — атака началась, идёт КД на повторную атаку (1 час от attackAt).
-    // Старые данные (только lastAttackedAt) трактуются как начавшаяся атака.
     function squareAttackState(data) {
       data = data || {};
       const now = serverNow();
@@ -3155,51 +3001,34 @@
       const ss = String(totalSec % 60).padStart(2, '0');
       return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
     }
-    // Таймер сверху квадрата — ТОЛЬКО для того квадрата, на который напали:
-    //  pending — атака назначена, идёт отсчёт до начала (🔥);
-    //  defense — атака началась: на этот квадрат нельзя напасть ещё час (🛡).
-    // Остальные квадраты той же фракции таймера не получают.
-    function squareTimerInfo(data) {
-      const st = squareAttackState(data || {});
-      if (!st) return null;
-      return { kind: st.state === 'pending' ? 'pending' : 'defense', remaining: st.remaining };
-    }
     function updateCooldownTimers() {
       Object.keys(squareMarkers).forEach((id) => {
         const marker = squareMarkers[id];
         const data = squareData[id] || {};
-        const el = marker.getElement();
-        if (!el) return;
-        const cdEl = el.querySelector('.square-cooldown');
-        if (!cdEl) return;
-        const info = squareTimerInfo(data);
-        if (info) {
-          cdEl.querySelector('.square-cooldown-text').textContent = formatMMSS(info.remaining);
-          const fireEl = cdEl.querySelector('.square-fire');
-          const icon = info.kind === 'pending' ? '🔥' : (info.kind === 'defense' ? '🛡' : '⚔');
-          if (fireEl && fireEl.textContent !== icon) fireEl.textContent = icon;
-          cdEl.classList.toggle('pending', info.kind === 'pending');
-          cdEl.classList.toggle('defense', info.kind === 'defense');
-          cdEl.classList.toggle('attack', false);
-          cdEl.style.display = 'flex';
-        } else {
-          cdEl.style.display = 'none';
+        const vs = squareVisualState(data);
+        const key = vs ? vs.kind : '';
+        if (marker._visState !== key) {
+          marker._visState = key;
+          if (!marker._localDragging) marker.setIcon(squareIcon(data, id));
+          marker.setZIndexOffset(key === 'pending' || key === 'fight' ? 1000 : 0);
         }
-        // квадрат с таймером поднимаем поверх соседей, чтобы плашку не перекрывали
-        if (marker._cdActive !== !!info) { marker._cdActive = !!info; marker.setZIndexOffset(info ? 1000 : 0); }
+        if (vs) {
+          const el = marker.getElement();
+          const t = el && el.querySelector('.sq-timer');
+          if (t) t.textContent = formatMMSS(vs.remaining);
+        }
       });
+      if (attackPopupId) {
+        const k = visKey(squareData[attackPopupId]);
+        if (k !== 'pending' && k !== 'fight') closeAttackPopup();
+      }
       try { updateCombatBadges(); } catch (e) {}
-      // Если открыто окно квадрата — обновляем кнопку/причину блокировки
-      // (например, когда отсчёт закончился и началось КД).
       if (typeof infoSquareId !== 'undefined' && infoSquareId && squareInfoEl.classList.contains('visible')) {
         try { updateAttackButtonVisibility(); } catch (e) {}
       }
     }
     setInterval(updateCooldownTimers, 1000);
 
-    // При смене зума карты пересчитываем размер всех квадратов (см.
-    // currentZoomScale) — не трогаем тот, который сам пользователь сейчас
-    // тащит мышью, по той же причине, что и в live-обновлениях из Firebase.
     map.on('zoomend', () => {
       Object.keys(squareMarkers).forEach((id) => {
         const marker = squareMarkers[id];
@@ -3208,32 +3037,206 @@
         marker.setIcon(squareIcon(data, id));
       });
     });
+    map.on('movestart zoomstart click', () => closeAttackPopup());
 
+    const attackPopupEl = document.getElementById('attackPopup');
+    let attackPopupId = null;
+    let attackPopupEditing = false;
+    let attackPopupCancelArmed = false;
+    let attackPopupError = '';
 
-    // ===== Материалы и статистика фракций =====
-    // Каждому квадрату задаётся выработка "материалов в день". Материалы
-    // фракции начисляются раз в сутки в 00:00 МСК: amount (на момент
-    // updatedAt) + выработка всех её квадратов × число прошедших полуночей. Значение на экране считается
-    // "на лету"; в Firebase фиксируется (settle) только при изменении
-    // выработки/владельца квадрата и при сбросе.
+    function formatStartLabel(ts) {
+      const parts = new Intl.DateTimeFormat('ru-RU', {
+        timeZone: 'Europe/Moscow', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+      }).formatToParts(new Date(ts));
+      const g = (t) => (parts.find((p) => p.type === t) || {}).value || '';
+      return `${g('day')}, ${g('month').replace(/\.$/, '')}. ${g('hour')}:${g('minute')}`;
+    }
+    function mskHHMM(ts) {
+      const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Moscow', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(ts));
+      const g = (t) => (parts.find((p) => p.type === t) || {}).value || '00';
+      return `${g('hour')}:${g('minute')}`;
+    }
+    function attackPopupInfo(id) {
+      const d = squareData[id] || {};
+      let participants = d.attackParticipants;
+      if (participants == null) {
+        const att = latestAttackFor(id);
+        if (att && att.item.participants != null) participants = att.item.participants;
+      }
+      return { enemy: d.attackerFaction || '—', defender: d.faction || '—', start: d.attackAt || d.lastAttackedAt, participants };
+    }
+    function renderAttackPopup() {
+      const id = attackPopupId;
+      if (!id) return;
+      const info = attackPopupInfo(id);
+      const canManage = !!(window.canEditSquareResult || (window.currentPerms && window.currentPerms.owner));
+      let html = `<div class="ap-row"><span class="ico">${ICONS.swords}</span>${escapeHtml(info.enemy)}</div>`
+        + `<div class="ap-row"><span class="ico">${ICONS.shield}</span>${escapeHtml(info.defender)}</div>`
+        + `<div class="ap-meta">Начало: <b>${info.start ? formatStartLabel(info.start) : '—'}</b></div>`;
+      if (info.participants != null) html += `<div class="ap-meta">Участников: <b>${escapeHtml(info.participants)}</b></div>`;
+      if (canManage && attackPopupEditing) {
+        html += `<div class="ap-edit"><label>Время (МСК)<input type="time" id="apTime" step="60" value="${info.start ? mskHHMM(info.start - ATTACK_PREP_DELAY_MS) : ''}"></label>`
+          + `<label>Участников<input type="number" id="apParts" min="1" step="1" value="${info.participants != null ? escapeHtml(info.participants) : ''}"></label>`
+          + `<button type="button" data-ap="save">Сохранить</button><button type="button" class="ghost" data-ap="back">Назад</button></div>`;
+      } else if (canManage) {
+        html += `<button type="button" data-ap="edit">Редактировать</button>`
+          + `<button type="button" class="cancel" data-ap="cancel">${attackPopupCancelArmed ? 'Точно отменить?' : 'Отменить'}</button>`;
+      }
+      if (attackPopupError) html += `<div class="ap-err">${escapeHtml(attackPopupError)}</div>`;
+      html += `<button type="button" class="ghost" data-ap="info">О квадрате</button>`;
+      attackPopupEl.innerHTML = html;
+    }
+    function positionAttackPopup() {
+      const marker = squareMarkers[attackPopupId];
+      const el = marker && marker.getElement();
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      attackPopupEl.style.left = '0px';
+      attackPopupEl.style.top = '0px';
+      const pw = attackPopupEl.offsetWidth, ph = attackPopupEl.offsetHeight;
+      let left = r.right + 10;
+      if (left + pw > window.innerWidth - 8) left = r.left - pw - 10;
+      if (left < 8) left = Math.max(8, (window.innerWidth - pw) / 2);
+      let top = r.top + r.height / 2 - ph / 2;
+      top = Math.min(Math.max(8, top), Math.max(8, window.innerHeight - ph - 8));
+      attackPopupEl.style.left = left + 'px';
+      attackPopupEl.style.top = top + 'px';
+    }
+    function openAttackPopup(id) {
+      attackPopupId = id;
+      attackPopupEditing = false;
+      attackPopupCancelArmed = false;
+      attackPopupError = '';
+      renderAttackPopup();
+      attackPopupEl.classList.add('visible');
+      positionAttackPopup();
+    }
+    function closeAttackPopup() {
+      attackPopupId = null;
+      attackPopupEl.classList.remove('visible');
+    }
+    function rerenderAttackPopup() {
+      renderAttackPopup();
+      positionAttackPopup();
+    }
+    attackPopupEl.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-ap]');
+      if (!btn || !attackPopupId) return;
+      const id = attackPopupId;
+      const act = btn.dataset.ap;
+      const d = squareData[id] || {};
+      const lbl = d.label || 'Без названия';
+      if (act === 'info') { closeAttackPopup(); openSquareInfo(id, d); return; }
+      if (act === 'edit') { attackPopupEditing = true; attackPopupError = ''; rerenderAttackPopup(); return; }
+      if (act === 'back') { attackPopupEditing = false; attackPopupError = ''; rerenderAttackPopup(); return; }
+      if (act === 'cancel') {
+        if (!attackPopupCancelArmed) { attackPopupCancelArmed = true; rerenderAttackPopup(); return; }
+        const f = d.attackerFaction;
+        const tasks = [squaresRef.child(id).update({ attackAt: null, lastAttackedAt: null, attackerFaction: null, noticeUntil: null, attackParticipants: null })];
+        if (f) tasks.push(factionCooldownsRef.child(f).update({ attackUntil: null }));
+        Promise.all(tasks).then(() => logAction('Отменил атаку', `«${lbl}»${f ? ` (нападала ${f})` : ''}`)).catch(() => {});
+        closeAttackPopup();
+        return;
+      }
+      if (act === 'save') {
+        const t = document.getElementById('apTime').value;
+        const pRaw = document.getElementById('apParts').value;
+        const p = Number(pRaw);
+        if (pRaw !== '' && (!Number.isInteger(p) || p < 1)) { attackPopupError = 'Участников — целое число больше 0.'; rerenderAttackPopup(); return; }
+        const info = attackPopupInfo(id);
+        const newStart = t ? attackTimestampFor(t) : info.start;
+        const upd = { attackAt: newStart, attackParticipants: pRaw !== '' ? p : null };
+        if (newStart > serverNow()) upd.noticeUntil = newStart;
+        const tasks = [squaresRef.child(id).update(upd)];
+        if (d.attackerFaction) tasks.push(factionCooldownsRef.child(d.attackerFaction).update({ attackUntil: newStart + ATTACK_COOLDOWN_MS }));
+        const att = latestAttackFor(id);
+        if (att) tasks.push(battleHistoryRef.child(att.key).update({ attackAt: newStart, plannedTime: t || null, participants: pRaw !== '' ? p : null }));
+        Promise.all(tasks).then(() => logAction('Изменил атаку', `«${lbl}»${t ? `, время ${t} МСК` : ''}${pRaw !== '' ? `, участников ${p}` : ''}`)).catch(() => {});
+        attackPopupEditing = false;
+        attackPopupError = '';
+        rerenderAttackPopup();
+      }
+    });
+
+    const LINK_REQUIRED_SHARE = 0.75;
+    function linkedChildren(bigId) {
+      return Object.keys(squareData).filter((k) => squareData[k] && squareData[k].linkedTo === bigId);
+    }
+    function linkRequirement(bigId, faction) {
+      const kids = linkedChildren(bigId);
+      const n = kids.length;
+      if (!n) return null;
+      const need = Math.ceil(n * LINK_REQUIRED_SHARE);
+      const have = faction ? kids.filter((k) => squareData[k].faction === faction).length : 0;
+      return { n, need, have, ok: have >= need };
+    }
+    function rerenderSquares(ids) {
+      ids.forEach((k) => {
+        const m = squareMarkers[k];
+        if (m && squareData[k] && !m._localDragging) m.setIcon(squareIcon(squareData[k], k));
+      });
+    }
+    const linkHintEl = document.getElementById('linkHint');
+    function updateLinkHint() {
+      if (!linkMode) return;
+      const d = squareData[linkMode.bigId] || {};
+      document.getElementById('linkHintText').textContent =
+        `🔗 Привязка к «${d.label || 'Без названия'}»: кликайте по малым квадратам (повторный клик — отвязать) · привязано: ${linkedChildren(linkMode.bigId).length} · Esc — выйти`;
+      linkHintEl.classList.add('visible');
+    }
+    function startLinkMode(bigId) {
+      stopPasteMode();
+      stopLinkMode();
+      linkMode = { bigId };
+      map.getContainer().style.cursor = 'cell';
+      rerenderSquares([bigId].concat(linkedChildren(bigId)));
+      updateLinkHint();
+    }
+    function stopLinkMode() {
+      if (!linkMode) return;
+      const bigId = linkMode.bigId;
+      const ids = [bigId].concat(linkedChildren(bigId));
+      linkMode = null;
+      rerenderSquares(ids);
+      linkHintEl.classList.remove('visible');
+      map.getContainer().style.cursor = squareModeActive ? 'crosshair' : '';
+    }
+    function toggleLink(id) {
+      if (!linkMode || !window.isAdmin) return;
+      const bigId = linkMode.bigId;
+      if (id === bigId) return;
+      const d = squareData[id] || {};
+      const linked = d.linkedTo === bigId;
+      squaresRef.child(id).update({ linkedTo: linked ? null : bigId }).then(() => {
+        updateLinkHint();
+        logAction(linked ? 'Отвязал проходной квадрат' : 'Привязал проходной квадрат', `«${d.label || 'Без названия'}» → «${sqName(bigId)}»`);
+      }).catch(() => {});
+    }
+    document.getElementById('linkDoneBtn').onclick = stopLinkMode;
+    document.getElementById('linkClearBtn').onclick = () => {
+      if (!linkMode) return;
+      const upd = {};
+      linkedChildren(linkMode.bigId).forEach((k) => { upd[`${k}/linkedTo`] = null; });
+      if (Object.keys(upd).length) squaresRef.update(upd).then(() => { updateLinkHint(); logAction('Отвязал все проходные', `«${sqName(linkMode ? linkMode.bigId : '')}»`); }).catch(() => {});
+    };
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (linkMode) stopLinkMode();
+      closeAttackPopup();
+    });
+
     const statsRef = firebase.database().ref('stats/materials');
     let materialsStats = {};
     let serverOffset = 0;
     const MS_DAY = 24 * 60 * 60 * 1000;
     firebase.database().ref('.info/serverTimeOffset').on('value', (s) => { serverOffset = s.val() || 0; });
     function serverNow() { return Date.now() + serverOffset; }
-    // Материалы начисляются раз в сутки, ровно в 00:00 по Москве (UTC+3, без
-    // перехода на летнее время): считаем, сколько полуночей МСК прошло между
-    // двумя моментами.
     const MSK_OFFSET_MS = 3 * 60 * 60 * 1000;
     function mskDayIndex(ts) { return Math.floor((ts + MSK_OFFSET_MS) / MS_DAY); }
     function midnightsBetween(fromTs, toTs) { return Math.max(0, mskDayIndex(toTs) - mskDayIndex(fromTs)); }
     function factionSquares(f) { return Object.keys(squareData).filter((id) => squareData[id] && squareData[id].faction === f); }
     function factionRate(f) { return factionSquares(f).reduce((sum, id) => sum + (Number(squareData[id].materialsPerDay) || 0), 0); }
-    // Материалы НЕ начисляются автоматически: значение — это накопленный
-    // amount. Пополнить его можно только вручную (тестовое начисление в
-    // статистике для stadmin/супер админа). settleFaction оставлен для
-    // совместимости и ничего не считает.
     function factionMaterials(f) {
       const st = materialsStats[f];
       return st ? (st.amount || 0) : 0;
@@ -3244,7 +3247,6 @@
     function settleFactions(list) {
       return Promise.all([...new Set(list.filter(Boolean))].map(settleFaction));
     }
-    // Стартовая точка отсчёта для фракций, у которых ещё нет записи.
     function ensureStatsInit() {
       FACTIONS.forEach((f) => {
         if (materialsStats[f] || !factionSquares(f).length || ensureStatsInit._busy[f]) return;
@@ -3270,6 +3272,7 @@
     squaresRef.on('child_changed', (snap) => {
       squareData[snap.key] = snap.val();
       upsertSquareMarker(snap.key, snap.val());
+      if (linkMode) updateLinkHint();
       refreshSquaresInteractivity();
       updateCooldownTimers();
     });
@@ -3279,7 +3282,6 @@
       if (marker) { map.removeLayer(marker); delete squareMarkers[snap.key]; }
     });
 
-    // --- Редактор (добавление/изменение/удаление квадрата) ---
     let editingSquareId = null;
     let editingSquareLatLng = null;
     let ghostSquareMarker = null;
@@ -3296,7 +3298,6 @@
     const factionInput = document.getElementById('squareFactionInput');
     const typeInput = document.getElementById('squareTypeInput');
     typeInput.innerHTML = '<option value="">— обычный —</option>' + Object.keys(SPECIAL_TYPES).map((k) => `<option value="${k}">${SPECIAL_TYPES[k]}</option>`).join('');
-    // Выбрали тип у квадрата без фракции — красим в тёмно-серый, как особые квадраты в игре.
     typeInput.addEventListener('change', () => {
       if (typeInput.value && !factionInput.value) colorInput.value = SPECIAL_COLOR;
       updatePreview();
@@ -3313,7 +3314,6 @@
     }
     lockedInput.addEventListener('change', updateLockLabel);
 
-    // Заливка дорожки ползунков до текущего значения (для Chrome/Safari).
     function refreshRangeFills() {
       document.querySelectorAll('input[type="range"]').forEach((r) => {
         const min = Number(r.min || 0), max = Number(r.max || 100);
@@ -3332,7 +3332,6 @@
       updateRangeLabels();
       const size = Number(sizeInput.value);
       const alpha = Number(opacityInput.value) / 100;
-      // Предпросмотр автоматически вписывается в окошко (большие квадраты уменьшаются).
       const scale = size > 100 ? 100 / size : 1;
       previewEl.style.flex = 'none';
       previewEl.style.width = size + 'px';
@@ -3346,14 +3345,12 @@
       previewEl.innerHTML = (key && px >= 8) ? `<span class="square-center-icon">${iconSvg(key, px)}</span>` : '';
       const noteEl = document.getElementById('squarePreviewNote');
       if (noteEl) {
-        const onMap = Math.max(6, Math.round(size * currentZoomScale()));
+        const onMap = Math.round(size * currentZoomScale() * 10) / 10;
         noteEl.textContent = `На карте сейчас: ${onMap}px` + (scale < 1 ? ` · предпросмотр уменьшен до ${Math.round(scale * 100)}%` : '');
       }
       if (editorEl.classList.contains('visible')) liveMapPreview();
     }
 
-    // Live-предпросмотр прямо на карте: пока открыт редактор, меняющийся квадрат
-    // сразу выглядит на карте так, как будет после "Сохранить" (отмена — вернёт как было).
     function draftSquareData() {
       const base = editingSquareId ? (squareData[editingSquareId] || {}) : {};
       return Object.assign({}, base, {
@@ -3383,7 +3380,6 @@
         squareMarkers[id].setIcon(squareIcon(squareData[id], id));
       }
     }
-    // Ползунки, цвета и подпись обновляют предпросмотр и карту "на лету".
     [labelInput, colorInput, borderColorInput, borderWidthInput, sizeInput, opacityInput].forEach((el) => {
       el.addEventListener('input', updatePreview);
       el.addEventListener('change', updatePreview);
@@ -3402,7 +3398,7 @@
       borderWidthInput.value = data.borderWidth != null ? data.borderWidth : 0;
       sizeInput.value = data.size || 20;
       opacityInput.value = data.opacity != null ? Math.round(data.opacity * 100) : 100;
-      lockedInput.checked = data.locked !== false; // по умолчанию заблокирован
+      lockedInput.checked = data.locked !== false;
       descriptionInput.value = data.description || '';
       factionInput.value = data.faction || '';
       typeInput.value = data.type || '';
@@ -3412,6 +3408,9 @@
       updatePreview();
       deleteBtn.classList.toggle('hidden', !id || !window.canDeleteSquares);
       document.getElementById('squareCopyBtn').style.display = id ? '' : 'none';
+      const linkBtn = document.getElementById('squareLinkBtn');
+      linkBtn.style.display = id ? '' : 'none';
+      if (id) linkBtn.textContent = `🔗 Привязать проходные (${linkedChildren(id).length})`;
       editorTitleEl.textContent = id ? 'Редактирование квадрата' : 'Новый квадрат';
       editorEl.classList.add('visible');
       liveMapPreview();
@@ -3429,11 +3428,8 @@
       deleteBtn.classList.toggle('hidden', !editingSquareId || !window.canDeleteSquares);
     }
 
-    // Пока режим добавления/редактирования включён кнопкой "Квадрат", любой
-    // клик по свободному месту карты создаёт новый квадрат (можно ставить
-    // несколько подряд, не нажимая кнопку заново).
     function handleMapClickForSquare(e) {
-      if (pasteTemplate) return;
+      if (pasteTemplate || linkMode) return;
       if (!squareModeActive || !window.isAdmin) return;
       openSquareEditor(null, e.latlng, {});
     }
@@ -3451,6 +3447,7 @@
       } else {
         map.off('click', handleMapClickForSquare);
         stopPasteMode();
+        stopLinkMode();
         closeSquareEditor();
       }
       refreshSquaresInteractivity();
@@ -3478,8 +3475,6 @@
       const id = editingSquareId, ll = editingSquareLatLng;
       const oldFaction = id ? (squareData[id] || {}).faction : null;
       closeSquareEditor();
-      // Перед изменением фракции/выработки "закрываем" накопленные
-      // материалы по старым условиям, чтобы подсчёт оставался точным.
       const lblSave = payload.label || 'Без названия';
       settleFactions([oldFaction, payload.faction]).then(() => {
         if (id) {
@@ -3497,7 +3492,7 @@
       const f = id ? (squareData[id] || {}).faction : null;
       closeSquareEditor();
       const lblDel = id ? sqName(id) : '';
-      if (id) settleFactions([f]).then(() => squaresRef.child(id).remove()).then(() => logAction('Удалил квадрат', `«${lblDel}»${f ? ` (${f})` : ''}`));
+      if (id) settleFactions([f]).then(() => { const upd = {}; linkedChildren(id).forEach((k) => { upd[`${k}/linkedTo`] = null; }); upd[id] = null; return squaresRef.update(upd); }).then(() => logAction('Удалил квадрат', `«${lblDel}»${f ? ` (${f})` : ''}`));
     };
     document.getElementById('squareNeutralBtn').onclick = () => {
       factionInput.value = '';
@@ -3506,7 +3501,6 @@
     };
     document.getElementById('squareCancelBtn').onclick = closeSquareEditor;
 
-    // ---- Копирование квадрата: берём настройки из открытого редактора и ставим копии кликами по карте ----
     const pasteHintEl = document.getElementById('pasteHint');
     function updatePasteHint() {
       const name = (pasteTemplate && pasteTemplate.label) || 'Без названия';
@@ -3572,11 +3566,15 @@
       startPasteMode(tpl);
     };
     document.getElementById('pasteDoneBtn').onclick = stopPasteMode;
+    document.getElementById('squareLinkBtn').onclick = () => {
+      if (!editingSquareId || !window.isAdmin) return;
+      const id = editingSquareId;
+      closeSquareEditor();
+      startLinkMode(id);
+    };
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && pasteTemplate) stopPasteMode(); });
     document.getElementById('squareCloseBtn').onclick = closeSquareEditor;
-    // ====================================================================
 
-    // --- Инфо-панель квадрата (показывается всем при клике вне режима редактирования) ---
     const squareInfoEl = document.getElementById('squareInfoModal');
     const squareInfoBackdropEl = document.getElementById('squareInfoBackdrop');
     const squareInfoIconEl = document.getElementById('squareInfoIcon');
@@ -3592,8 +3590,6 @@
     function formatTimestamp(ts) {
       if (!ts) return '';
       const d = new Date(ts);
-      // Всегда московское время (МСК, UTC+3), независимо от часового пояса
-      // браузера посетителя.
       const parts = new Intl.DateTimeFormat('ru-RU', {
         timeZone: 'Europe/Moscow',
         day: '2-digit', month: '2-digit', year: 'numeric',
@@ -3603,19 +3599,9 @@
       return `${get('day')}.${get('month')}.${get('year')} ${get('hour')}:${get('minute')} МСК`;
     }
 
-    // Проверяет, можно ли текущему пользователю атаковать открытый в
-    // инфо-панели квадрат прямо сейчас, и если нет — возвращает причину
-    // (текст для кнопки/ошибки). Возвращает null, если атаковать можно.
-    // Используется и для визуального состояния кнопки, и как финальная
-    // проверка перед самой отправкой атаки.
-    // Универсальная проверка — можно ли атаковать конкретный квадрат прямо
-    // сейчас (принимает id/данные явно, а не только через открытую
-    // инфо-панель) — используется и модальной кнопкой "Напасть", и отдельной
-    // кнопкой атаки прямо на квадрате.
     function getAttackBlockReasonFor(id, data) {
       const perms = window.currentPerms || {};
       data = data || {};
-      // Супер админ может нападать в любое время: ни КД, ни лимиты его не блокируют.
       if (perms.owner) return null;
       const st = squareAttackState(data);
       if (st && st.state === 'pending') {
@@ -3625,7 +3611,6 @@
         const mins = Math.ceil(st.remaining / 60000);
         return { short: `⏳ Ещё ${mins} мин.`, full: `Этот квадрат недавно атаковали — повторная атака будет доступна через ${mins} мин.` };
       }
-      // КД атаки своей фракции: после нападения следующая атака — только после сброса таймера.
       if (perms.faction) {
         const rem = fcRemaining(perms.faction, 'attack');
         if (rem > 0) {
@@ -3634,6 +3619,10 @@
       }
       if (perms.faction && data.faction && perms.faction === data.faction) {
         return { short: '⚔ Своя фракция', full: 'Нельзя атаковать квадрат своей же фракции.' };
+      }
+      const linkReq = linkRequirement(id, perms.faction || null);
+      if (linkReq && !linkReq.ok) {
+        return { short: `🔗 Проходные ${linkReq.have}/${linkReq.n}`, full: `Чтобы напасть на этот квадрат, нужно контролировать минимум ${linkReq.need} из ${linkReq.n} привязанных проходных квадратов (сейчас у вашей фракции — ${linkReq.have}).` };
       }
       if (perms.attacksPerDay != null) {
         const used = (perms.roleId && roleUsageData[perms.roleId] && roleUsageData[perms.roleId][todayKey()] && roleUsageData[perms.roleId][todayKey()].attacks) || 0;
@@ -3644,15 +3633,10 @@
       return null;
     }
 
-    // Проверка для квадрата, открытого в инфо-панели (модальная кнопка).
     function getAttackBlockReason() {
       return getAttackBlockReasonFor(infoSquareId, squareData[infoSquareId] || infoSquareData);
     }
 
-    // Собственно отправка атаки — общая для модальной кнопки "Напасть" и
-    // для отдельной кнопки атаки прямо на квадрате. Возвращает Promise.
-    // Допустимое время нападения (МСК): с 12:30 до 23:30, кроме окон
-    // 16:00–16:30 и 20:00–20:30 (12:00–12:30 тоже недоступно, т.к. раньше 12:30).
     function isAllowedAttackTime(hhmm) {
       const m = /^(\d{2}):(\d{2})$/.exec(hhmm || '');
       if (!m) return false;
@@ -3663,9 +3647,6 @@
       return true;
     }
 
-    // Момент реального начала атаки: выбранное сегодняшнее HH:MM по Москве
-    // (UTC+3) + фиксированная 15-минутная задержка на подготовку (выбрали
-    // 14:00 — атака стартует в 14:15).
     const ATTACK_PREP_DELAY_MS = 15 * 60 * 1000;
     function attackTimestampFor(hhmm) {
       const [h, m] = hhmm.split(':').map(Number);
@@ -3675,10 +3656,6 @@
       return selectedMoment + ATTACK_PREP_DELAY_MS;
     }
 
-    // Дёргает Cloudflare Worker, который открывает ЛС в Discord и пишет
-    // супер-админу, кто на кого напал. Специально НЕ входит в Promise.all()
-    // выше и обёрнута в try/catch — если Worker недоступен или ещё не
-    // задеплоен, это не должно ломать саму атаку в игре.
     function postToWorker(payload) {
       if (!ATTACK_NOTIFY_WORKER_URL || ATTACK_NOTIFY_WORKER_URL.includes('YOUR-SUBDOMAIN')) return;
       try {
@@ -3690,7 +3667,6 @@
           },
           body: JSON.stringify(payload)
         }).then((r) => r.json().catch(() => ({})).then((j) => {
-          // Причина, если ЛС не дошло (403 — секрет не совпал, errors — ответ Discord, напр. 50007).
           if (!r.ok || (j && j.ok === false)) console.warn('Worker уведомление не доставлено:', r.status, j);
         })).catch((err) => console.warn('Не удалось отправить уведомление:', err));
       } catch (err) {
@@ -3698,7 +3674,6 @@
       }
     }
     function notifyAttackViaWorker(payload) { postToWorker(payload); }
-    // Новое обращение: Worker сам прочитает его из базы и пришлёт супер-админу ЛС с пингом.
     function notifyAppealViaWorker(id) { postToWorker({ type: 'appeal', id }); }
 
     function performAttack(id, data, extra) {
@@ -3710,12 +3685,9 @@
       const dateKey = todayKey();
       const tasks = [];
 
-      // 1) Списываем атаку с суточного лимита роли атакующего (общий "запас"
-      // на всех, у кого эта роль).
       if (perms.roleId) {
         tasks.push(roleUsageRef.child(perms.roleId).child(dateKey).child('attacks').transaction((cur) => (cur || 0) + 1));
       }
-      // 2) Начисляем защиту всем ролям фракции, которой принадлежит квадрат.
       if (squareFaction) {
         Object.keys(rolesData).forEach((rid) => {
           if (rolesData[rid] && rolesData[rid].faction === squareFaction) {
@@ -3723,19 +3695,15 @@
           }
         });
       }
-      // 3) Ставим квадрату метку времени атаки — включает часовую задержку
-      // на повторную атаку этого же квадрата для всех, и запускает онлайн-таймер.
       const atkAtTs = extra.attackAt || serverNow();
       tasks.push(squaresRef.child(id).update({
         attackAt: atkAtTs, lastAttackedAt: null,
         attackerFaction: perms.faction || null,
+        attackParticipants: extra.participants || null,
         noticeUntil: atkAtTs > serverNow() ? atkAtTs : serverNow() + ATTACK_PREP_DELAY_MS
       }));
-      // 3.1) КД атаки фракции-нападающей на 1 час. КД защиты — только у самого
-      // атакованного квадрата (attackAt выше), остальные квадраты фракции не затрагиваются.
       const cdUntil = (extra.attackAt || serverNow()) + ATTACK_COOLDOWN_MS;
       if (perms.faction) tasks.push(factionCooldownsRef.child(perms.faction).update({ attackUntil: cdUntil }));
-      // 4) Записываем саму атаку в историю сражений.
       tasks.push(battleHistoryRef.push({
         title: `Атака на «${squareLabel}»`,
         description: `${attackerName} напал(а) на квадрат «${squareLabel}»${squareFaction ? ` (фракция ${squareFaction})` : ''}.`,
@@ -3763,26 +3731,18 @@
       });
 
       return Promise.all(tasks).then((res) => {
-        // Подстраховка: сразу пересчитываем плашку атаки/защиты и таймер КД
-        // на квадрате, не дожидаясь live-события от Firebase (обычно оно и
-        // так приходит почти мгновенно, но так плашка гарантированно
-        // покажет актуальное "1/1" сразу после атаки).
         if (typeof updateCombatBadges === 'function') updateCombatBadges();
         if (typeof updateCooldownTimers === 'function') updateCooldownTimers();
         return res;
       });
     }
 
-    // Показывает/прячет кнопку "Напасть" в уже открытой инфо-панели квадрата
-    // в соответствии с текущими правами — вызывается и при открытии панели,
-    // и при live-изменении прав/лимитов (выдали/забрали роль с атакой,
-    // изменился суточный расход, пока панель открыта).
     function updateAttackButtonVisibility() {
       const canAttackAtAll = !!window.canAttackSquares && !!currentUser && !!infoSquareId;
       squareAttackBtnEl.classList.toggle('hidden', !canAttackAtAll);
       const attackFormEl = document.getElementById('squareAttackForm');
       if (!canAttackAtAll) { attackFormEl.classList.add('hidden'); return; }
-      if (squareAttackBtnEl.classList.contains('sent')) { attackFormEl.classList.add('hidden'); return; } // не перетираем "Атака отправлена"
+      if (squareAttackBtnEl.classList.contains('sent')) { attackFormEl.classList.add('hidden'); return; }
       const block = getAttackBlockReason();
       attackFormEl.classList.toggle('hidden', !!block);
       if (block) {
@@ -3820,6 +3780,19 @@
       } else {
         squareInfoFactionEl.style.display = 'none';
       }
+      const linksEl = document.getElementById('squareInfoLinks');
+      const kidsCount = linkedChildren(id).length;
+      if (kidsCount) {
+        const myF = (window.currentPerms || {}).faction || null;
+        const rq = linkRequirement(id, myF);
+        linksEl.textContent = `🔗 Проходных: ${kidsCount} · для атаки нужно контролировать ${rq.need}` + (myF ? ` · у ${myF}: ${rq.have}/${kidsCount}` : '');
+        linksEl.style.display = 'block';
+      } else if (data.linkedTo && squareData[data.linkedTo]) {
+        linksEl.textContent = `🔗 Проходной квадрат «${sqName(data.linkedTo)}»`;
+        linksEl.style.display = 'block';
+      } else {
+        linksEl.style.display = 'none';
+      }
       const desc = (data.description || '').trim();
       squareInfoDescEl.textContent = desc || 'Описание отсутствует.';
       squareInfoDescEl.classList.toggle('empty', !desc);
@@ -3850,7 +3823,6 @@
       const participants = Number(partsRaw);
       let formError = null;
       if (isOwnerAtk) {
-        // Супер админ: любое время (пустое = прямо сейчас), любое число участников.
         if (partsRaw !== '' && (!Number.isInteger(participants) || participants < 1)) formError = 'Количество участников — целое число больше 0.';
       } else if (!plannedTime) formError = 'Выберите время нападения.';
       else if (!isAllowedAttackTime(plannedTime)) formError = 'Это время недоступно. Нападение возможно с 12:30 до 23:30 по Москве, кроме 16:00–16:30 и 20:00–20:30.';
@@ -3869,11 +3841,6 @@
       document.getElementById('squareAttackForm').classList.add('hidden');
 
       performAttack(infoSquareId, infoSquareData, { plannedTime: plannedTime || null, participants: partsRaw !== '' ? participants : null, attackAt: plannedTime ? attackTimestampFor(plannedTime) : serverNow() }).then(() => {
-        // Успех подтверждаем видимым результатом: кнопка остаётся в
-        // состоянии "отправлено" — запись уже появится в "Истории сражений"
-        // (список обновляется сам, т.к. подписан на live-изменения
-        // battleHistoryRef), а плашка атаки/защиты и таймер КД на квадрате
-        // обновятся сразу же (см. performAttack).
       }).catch((err) => {
         console.error(err);
         squareAttackBtnEl.disabled = false;
@@ -3886,9 +3853,6 @@
       });
     };
 
-
-    // --- "Редактировать" в окне квадрата (stadmin/admin/владелец): передать
-    // квадрат фракции, перекрасить, определить победителя последней атаки. ---
     const squareEditToggleBtnEl = document.getElementById('squareEditToggleBtn');
     const squareEditPanelEl = document.getElementById('squareEditPanel');
     const sqEditStatusEl = document.getElementById('sqEditStatus');
@@ -3999,18 +3963,13 @@
 
     document.getElementById('squareInfoCloseBtn').onclick = closeSquareInfo;
     squareInfoBackdropEl.onclick = closeSquareInfo;
-    // ====================================================================
 
-    // --- История сражений (доступна всем, кнопка внизу слева; разделена по
-    // дням, у админов есть кнопка очистки) ---
     const battleHistoryEl = document.getElementById('battleHistoryModal');
     const battleHistoryBackdropEl = document.getElementById('battleHistoryBackdrop');
     const battleHistoryListEl = document.getElementById('battleHistoryList');
     const battleHistoryClearBtnEl = document.getElementById('battleHistoryClearBtn');
     let battleHistoryData = {};
 
-    // Ключ дня по МСК (YYYY-MM-DD) для записи истории — используется, чтобы
-    // сгруппировать записи по дням в списке.
     function dayKeyOf(ts) {
       if (!ts) return '';
       const parts = new Intl.DateTimeFormat('en-CA', {
@@ -4019,8 +3978,6 @@
       const get = (t) => (parts.find((p) => p.type === t) || {}).value || '';
       return `${get('year')}-${get('month')}-${get('day')}`;
     }
-    // Человекочитаемый заголовок дня по МСК ("28 сентября 2026") — для
-    // сегодняшнего и вчерашнего дня показываем "Сегодня"/"Вчера".
     function dayHeaderOf(ts) {
       const key = dayKeyOf(ts);
       if (key === todayKey()) return 'Сегодня';
@@ -4037,7 +3994,7 @@
       const ids = Object.keys(battleHistoryData).sort((a, b) => {
         const ta = battleHistoryData[a].createdAt || 0;
         const tb = battleHistoryData[b].createdAt || 0;
-        return tb - ta; // сначала новые
+        return tb - ta;
       });
       if (!ids.length) {
         battleHistoryListEl.innerHTML = '<div class="battle-history-empty">Пока здесь пусто — сражений ещё не было.</div>';
@@ -4070,9 +4027,6 @@
       battleHistoryListEl.innerHTML = html;
     }
 
-    // Красный кружок-уведомление на кнопке "История сражений": число новых
-    // нападений с момента, когда человек последний раз открывал историю
-    // (хранится в браузере). Собственные атаки не считаются.
     const HISTORY_SEEN_KEY = 'history_seen_at';
     function historyMaxTs() {
       return Object.keys(battleHistoryData).reduce((m, k) => Math.max(m, (battleHistoryData[k] || {}).createdAt || 0), 0);
@@ -4086,7 +4040,7 @@
       if (!badgeEl) return;
       let seen = null;
       try { seen = localStorage.getItem(HISTORY_SEEN_KEY); } catch (e) {}
-      if (seen === null) { // первый визит — старые записи не считаем новыми
+      if (seen === null) {
         try { localStorage.setItem(HISTORY_SEEN_KEY, String(historyMaxTs())); } catch (e) {}
         seen = String(historyMaxTs());
       }
@@ -4098,7 +4052,7 @@
       const prev = updateHistoryBadge._prev || 0;
       badgeEl.textContent = count > 9 ? '9+' : String(count);
       badgeEl.classList.toggle('hidden', count === 0);
-      if (count > prev) { // пришло новое нападение — короткая "пульсация"
+      if (count > prev) {
         badgeEl.classList.remove('pop'); void badgeEl.offsetWidth; badgeEl.classList.add('pop');
       }
       updateHistoryBadge._prev = count;
@@ -4132,12 +4086,11 @@
     document.getElementById('battleHistoryCloseBtn').onclick = closeBattleHistory;
     battleHistoryBackdropEl.onclick = closeBattleHistory;
 
-    // --- Статистика: захваченные квадраты и материалы по фракциям ---
     const statsModalEl = document.getElementById('statsModal');
     const statsBackdropEl = document.getElementById('statsBackdrop');
     const statsListEl = document.getElementById('statsList');
     const statsResetBtnEl = document.getElementById('statsResetBtn');
-    const statsCopied = {}; // faction -> время до которого показываем "✓"
+    const statsCopied = {};
     const statsTypeInputEl = document.getElementById('statsTypeInput');
     try { statsTypeInputEl.value = localStorage.getItem('stats_type') || 'type'; } catch (e) {}
     statsTypeInputEl.onchange = () => { try { localStorage.setItem('stats_type', statsTypeInputEl.value.trim() || 'type'); } catch (e) {} };
@@ -4156,8 +4109,6 @@
         ta.remove(); resolve();
       });
     }
-    // Суперадмин и админы (stadmin/admin) видят все фракции и кнопку
-    // копирования команды; остальные — только статистику своей фракции.
     function renderStats() {
       const perms = window.currentPerms || {};
       const isAdminView = !!window.canEditSquareResult;
@@ -4208,8 +4159,6 @@
       FACTIONS.forEach((f) => { obj[f] = { amount: 0, updatedAt: now }; });
       statsRef.set(obj).then(() => logAction('Сбросил материалы всех фракций')).catch((e) => alert('Не удалось сбросить: ' + ((e && e.message) || e)));
     };
-    // 🧪 Тестовое начисление (stadmin / супер админ): один раз добавляет каждой
-    // фракции сумму выработки «📦 в день» её квадратов.
     document.getElementById('statsTestAccrualBtn').onclick = () => {
       if (!window.canTestAccrual) return;
       if (!confirm('Выполнить тестовое начисление? Каждая фракция получит сумму «📦 в день» своих квадратов (один раз).')) return;
@@ -4223,7 +4172,6 @@
       })).then(() => logAction('Тестовое начисление материалов', summary.join(', ') || 'нет выработки'))
         .catch((e) => alert('Не удалось начислить: ' + ((e && e.message) || e)));
     };
-    // ====================================================================
   </script>
 </body>
 </html>
