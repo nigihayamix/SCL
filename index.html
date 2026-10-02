@@ -18,14 +18,14 @@
       st.textContent = 'html,body{margin:0;height:100%;background:#0d0d0d!important;overflow:hidden}body>*:not(#sclBlock){display:none!important}#sclBlock{position:fixed;inset:0;display:flex!important;align-items:center;justify-content:center;text-align:center;padding:24px;box-sizing:border-box;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;z-index:2147483647;background:#0d0d0d}#sclBlock .b{max-width:340px}#sclBlock svg{width:84px;height:84px}#sclBlock h1{font-size:22px;margin:18px 0 8px;font-style:italic;font-weight:800;letter-spacing:-.02em;color:#fff}#sclBlock p{margin:0;color:#9a9aa2;font-size:15px;line-height:1.5}#sclBlock i{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff2d55;margin-left:4px}';
       document.head.appendChild(st);
       function show() {
-        document.body.innerHTML = '<div id="sclBlock"><div class="b">' + '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="60" height="60" rx="15" fill="#0d0d0d" stroke="#2a2a2e" stroke-width="2"/><g transform="skewX(-8) translate(5 0)"><path class="lg-s" pathLength="1" d="M43 21C43 13 21 13 21 24C21 35 43 29 43 40C43 51 20 51 20 43" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g><circle class="lg-dot" cx="50" cy="14" r="5" fill="#ff2d55"/></svg>' + '<h1>State Control League<i></i></h1><p>Доступ с телефонов закрыт.<br>Откройте сайт с компьютера или ноутбука.</p></div></div>';
+        document.body.innerHTML = '<div id="sclBlock"><div class="b">' + '<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle class="lg-s" pathLength="1" cx="32" cy="32" r="21" fill="none" stroke="#fff" stroke-width="3.5"/><path class="lg-s" pathLength="1" d="M32 3V15M32 49V61M3 32H15M49 32H61" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle class="lg-dot" cx="32" cy="32" r="8" fill="#ff2d55"/></svg>' + '<h1>State Control League<i></i></h1><p>Доступ с телефонов закрыт.<br>Откройте сайт с компьютера или ноутбука.</p></div></div>';
         document.title = 'State Control League';
       }
       if (document.body) show(); else document.addEventListener('DOMContentLoaded', show);
     })();
   </script>
   <title>State Control League</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2064%2064%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Crect%20x%3D%222%22%20y%3D%222%22%20width%3D%2260%22%20height%3D%2260%22%20rx%3D%2215%22%20fill%3D%22%230d0d0d%22%20stroke%3D%22%232a2a2e%22%20stroke-width%3D%222%22/%3E%3Cg%20transform%3D%22skewX%28-8%29%20translate%285%200%29%22%3E%3Cpath%20d%3D%22M43%2021C43%2013%2021%2013%2021%2024C21%2035%2043%2029%2043%2040C43%2051%2020%2051%2020%2043%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22/%3E%3C/g%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2214%22%20r%3D%225%22%20fill%3D%22%23ff2d55%22/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%2064%2064%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%2221%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.5%22/%3E%3Cpath%20d%3D%22M32%203V15M32%2049V61M3%2032H15M49%2032H61%22%20stroke%3D%22%23fff%22%20stroke-width%3D%223.5%22%20stroke-linecap%3D%22round%22%20fill%3D%22none%22/%3E%3Ccircle%20cx%3D%2232%22%20cy%3D%2232%22%20r%3D%228%22%20fill%3D%22%23ff2d55%22/%3E%3C/svg%3E">
   <meta name="theme-color" content="#0d0d0d">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -869,7 +869,7 @@
     <div class="scl-ring"></div><div class="scl-ring r2"></div><div class="scl-ring r3"></div>
     <div class="scl-scan"></div>
     <div class="scl-stack">
-      <div class="scl-logo"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="60" height="60" rx="15" fill="#0d0d0d" stroke="#2a2a2e" stroke-width="2"/><g transform="skewX(-8) translate(5 0)"><path class="lg-s" pathLength="1" d="M43 21C43 13 21 13 21 24C21 35 43 29 43 40C43 51 20 51 20 43" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g><circle class="lg-dot" cx="50" cy="14" r="5" fill="#ff2d55"/></svg></div>
+      <div class="scl-logo"><svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><circle class="lg-s" pathLength="1" cx="32" cy="32" r="21" fill="none" stroke="#fff" stroke-width="3.5"/><path class="lg-s" pathLength="1" d="M32 3V15M32 49V61M3 32H15M49 32H61" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none"/><circle class="lg-dot" cx="32" cy="32" r="8" fill="#ff2d55"/></svg></div>
       <div class="scl-word" id="sclWord" aria-label="State Control League"></div>
       <div class="scl-line"></div>
     </div>
@@ -879,10 +879,8 @@
       var root = document.getElementById('sclIntro');
       if (!root) return;
       if (window.__SCL_BLOCKED__) return;
-      // Вариант заставки: 1, 2 или 3. Для просмотра: ?intro=2
-      var VARIANT = 1;
-      var m = /[?&]intro=([123])/.exec(location.search);
-      if (m) VARIANT = +m[1];
+      // Выбранная заставка: «Радар»
+      var VARIANT = 2; // «Радар»
       root.setAttribute('data-v', VARIANT);
 
       var word = document.getElementById('sclWord');
