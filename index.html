@@ -3849,7 +3849,9 @@
         attackerRole: perms.roleName || null,
         attackerFaction: perms.faction || null,
         squareLabel,
-        squareFaction: squareFaction || null
+        squareFaction: squareFaction || null,
+        attackAt: atkAtTs,
+        participants: extra.participants || null
       });
 
       return Promise.all(tasks).then((res) => {
